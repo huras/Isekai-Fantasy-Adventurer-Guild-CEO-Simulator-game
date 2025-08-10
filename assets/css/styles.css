@@ -17,9 +17,10 @@ body {
 }
 .progress { height: 10px; }
 .entity-pill {
-  background: #0f1720;
+  background: #e6edf3;
   border: 1px solid #223142;
   border-radius: .5rem;
+  color: #0f1720;
   padding: .5rem .75rem;
 }
 .subtle { color: #9fb3c8; }

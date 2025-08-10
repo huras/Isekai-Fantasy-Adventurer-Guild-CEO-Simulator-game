@@ -18,7 +18,7 @@
         picked.push(items.splice(i, 1)[0]);
       }
       state.shop = picked.map(it => ({ ...it }));
-      UI.renderShop(state);
+      if (window.Store) Store.emit();
     },
     getPrice(state, item) {
       const discount = state.modifiers.shopDiscount || 0;
@@ -37,8 +37,7 @@
       item.apply(state);
       state.inventory.push(item);
       state.shop = state.shop.filter(s => s.id !== itemId);
-      UI.renderShop(state);
-      UI.refreshTopBar(state);
+      if (window.Store) Store.emit();
     },
   };
 

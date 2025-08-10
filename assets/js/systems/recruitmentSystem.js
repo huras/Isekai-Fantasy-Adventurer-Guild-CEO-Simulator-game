@@ -2,7 +2,7 @@
   const RecruitmentSystem = {
     async refreshWeeklyCandidates(state) {
       state.candidates = await AIProvider.generateCandidates(state.notoriety, state.week);
-      UI.renderCandidates(state);
+      if (window.Store) Store.emit();
     },
     acceptCandidate(state, candidateId) {
       const idx = state.candidates.findIndex(c => c.id === candidateId);
@@ -17,6 +17,7 @@
         personality: c.personality,
         gender: c.gender,
         appearance: c.appearance,
+        avatar: c.avatar || c.portrait || null,
         upkeep: c.upkeep,
         stats: {
           str: c.stats.str + recruitBonus,
@@ -31,13 +32,11 @@
       };
       state.members.push(member);
       UI.toast(`${member.name} joined!`, 'New recruit');
-      UI.renderGuild(state);
-      UI.renderCandidates(state);
-      UI.refreshTopBar(state);
+      if (window.Store) Store.emit();
     },
     rejectCandidate(state, candidateId) {
       state.candidates = state.candidates.filter(c => c.id !== candidateId);
-      UI.renderCandidates(state);
+      if (window.Store) Store.emit();
     },
     fireMember(state, memberId) {
       const idx = state.members.findIndex(m => m.id === memberId);
@@ -49,8 +48,7 @@
       }
       state.members.splice(idx, 1);
       UI.toast(`${m.name} was released.`, 'Fired');
-      UI.renderGuild(state);
-      UI.refreshTopBar(state);
+      if (window.Store) Store.emit();
     },
   };
 

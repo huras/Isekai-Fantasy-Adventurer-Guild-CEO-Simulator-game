@@ -63,8 +63,11 @@
       } else {
         log.push('Defeat... No rewards.');
       }
-      UI.renderBattle(state, actors, log);
-      UI.appendBattleLog(log.join('\n'));
+      state.logs = state.logs || {};
+      state.logs.battle = log.slice();
+      state.logs = state.logs || { events: [], battle: [] };
+      state.logs.battle.unshift(...log);
+      if (window.Store) Store.emit();
     },
   };
 

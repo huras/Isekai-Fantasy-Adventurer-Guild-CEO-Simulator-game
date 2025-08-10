@@ -2,6 +2,37 @@
   const UI = {
     toast(title, body) {
       try {
+        if (!GameState.logs) GameState.logs = { events: [], battle: [] };
+        GameState.logs.events.unshift(`${title}${body ? ': ' + body : ''}`);
+        if (global.Store) global.Store.emit();
+      } catch (_) {
+        console.log('[Toast]', title, body || '');
+      }
+    },
+    refreshTopBar() {},
+    logEvent(text) {
+      if (!GameState.logs) GameState.logs = { events: [], battle: [] };
+      GameState.logs.events.unshift(text);
+      if (global.Store) global.Store.emit();
+    },
+    appendBattleLog(text) {
+      if (!GameState.logs) GameState.logs = { events: [], battle: [] };
+      GameState.logs.battle.unshift(text);
+      if (global.Store) global.Store.emit();
+    },
+    renderGuild() {},
+    renderCandidates() {},
+    renderQuests() {},
+    renderShop() {},
+    renderBattle() {},
+  };
+  global.UI = UI;
+})(window);
+
+(function (global) {
+  const UI = {
+    toast(title, body) {
+      try {
         $('#toast-title').text(title);
         $('#toast-body').text(body || '');
         $('#toast-time').text(Utils.now());
@@ -23,9 +54,14 @@
     },
 
     logEvent(text) {
+      GameState.logs = GameState.logs || { events: [] };
+      GameState.logs.events = GameState.logs.events || [];
+      GameState.logs.events.push(text);
       const el = $('#event-log');
-      const line = $('<div>').text(`• ${text}`);
-      el.prepend(line);
+      if (el.length) {
+        const line = $('<div>').text(`• ${text}`);
+        el.prepend(line);
+      }
     },
 
     appendBattleLog(text) {

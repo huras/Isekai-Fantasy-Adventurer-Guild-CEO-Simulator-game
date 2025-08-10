@@ -23,7 +23,9 @@
           default:
             break;
         }
-        UI.logEvent(summary);
+        state.logs = state.logs || { events: [], battle: [] };
+        state.logs.events.unshift(summary);
+        if (window.Store) Store.emit();
       }
     },
   };

@@ -64,7 +64,7 @@
     async generateCandidates(notoriety, week) {
       const femaleNames = ['Aria', 'Hana', 'Eira', 'Juno', 'Lyra', 'Mina', 'Nadia', 'Ophelia', 'Rin', 'Sera', 'Talia', 'Yuna'];
       const maleNames = ['Borin', 'Caius', 'Fynn', 'Garruk', 'Kai', 'Leon', 'Rook', 'Sylas'];
-      const races = ['Human', 'Elf', 'Catfolk', 'Dwarf', 'Dragonkin', 'Fae'];
+      const races = ['Human', 'Elf', 'Catfolk', 'Dragonkin'];
       const hairColors = ['black', 'brown', 'blonde', 'silver', 'red', 'white', 'blue'];
       const eyeColors = ['brown', 'green', 'blue', 'amber', 'violet', 'gold'];
       const styles = ['elegant', 'cute', 'athletic', 'mysterious', 'cheerful', 'stoic', 'noble', 'graceful'];
@@ -99,6 +99,7 @@
         const speed = Utils.clamp(1 + Math.floor(stats.agi / 3), 1, 10);
         stats.speed = speed;
         const upkeep = 5 + Math.floor(Utils.sum([stats.str, stats.int, stats.agi, stats.spr]) / 6);
+        const avatar = (typeof PortraitProvider !== 'undefined' && PortraitProvider.random) ? PortraitProvider.random() : null;
         return {
           id: Utils.uid('cand'),
           name: `${Utils.pick(isFemale ? femaleNames : maleNames)} ${Utils.randInt(1, 99)}`,
@@ -106,6 +107,7 @@
           personality: this.randomPersonality(),
           gender,
           appearance,
+          avatar,
           stats,
           upkeep,
           skills: [],

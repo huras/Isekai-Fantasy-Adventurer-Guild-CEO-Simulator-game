@@ -24,6 +24,7 @@
     initialize() {
       // weekly and daily generation on fresh start
       this.ensurePlayer();
+      this.ensureAvatars();
       return this.onNewWeek().then(() => this.onNewDay());
     },
 
@@ -78,8 +79,18 @@
         hp: 40,
         speed: 3,
         skills: ['Leadership', 'Tactics'],
+        avatar: (typeof PortraitProvider !== 'undefined' && PortraitProvider.random) ? PortraitProvider.random() : null,
       };
       this.state.members.push(player);
+    },
+
+    ensureAvatars() {
+      if (!this.state || !Array.isArray(this.state.members)) return;
+      for (const m of this.state.members) {
+        if (!m.avatar && !m.portrait) {
+          m.avatar = (typeof PortraitProvider !== 'undefined' && PortraitProvider.random) ? PortraitProvider.random() : null;
+        }
+      }
     },
   };
 

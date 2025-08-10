@@ -9,7 +9,7 @@
   const QuestSystem = {
     async refreshDailyQuests(state) {
       state.quests = await AIProvider.generateQuestList(state.notoriety, state.day);
-      UI.renderQuests(state);
+      if (window.Store) Store.emit();
     },
 
     assignMember(state, questId, memberId) {
@@ -19,14 +19,14 @@
       quest.assigned = quest.assigned || [];
       if (quest.assigned.find(m => m.id === memberId)) return;
       quest.assigned.push(member);
-      UI.renderQuests(state);
+      if (window.Store) Store.emit();
     },
 
     unassignMember(state, questId, memberId) {
       const quest = state.quests.find(q => q.id === questId);
       if (!quest) return;
       quest.assigned = (quest.assigned || []).filter(m => m.id !== memberId);
-      UI.renderQuests(state);
+      if (window.Store) Store.emit();
     },
 
     startQuest(state, questId) {
@@ -55,7 +55,7 @@
       // Reset assignment and remove quest
       quest.assigned = [];
       state.quests = state.quests.filter(q => q.id !== questId);
-      UI.renderQuests(state);
+      if (window.Store) Store.emit();
     },
 
     autoAssignAndRun(state) {
