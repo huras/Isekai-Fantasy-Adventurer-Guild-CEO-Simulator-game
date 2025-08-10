@@ -34,7 +34,7 @@ export function Tabs({ tabs }: { tabs: Tab[] }) {
   }, [keys])
 
   return (
-    <div className="container-fluid py-3">
+    <div className="container-fluid py-3" style={{ minHeight: 'calc(100vh - 56px)' }}>
       <div className="row g-3">
         <div className="col-12 col-lg-3">
           <div className="list-group">

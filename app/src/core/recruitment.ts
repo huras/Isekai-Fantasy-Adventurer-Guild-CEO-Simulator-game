@@ -41,6 +41,9 @@ export async function generateCandidates(notoriety: number, week: number): Promi
     const hp = 10 + Math.floor(Math.random() * 11) + talent * 2
     const speed = Math.max(1, Math.min(10, 1 + Math.floor(agi / 3)))
     const upkeep = 5 + Math.floor((str + int + agi + spr) / 6)
+    const minWeeks = 1
+    const maxWeeks = 4
+    const durationWeeks = Math.floor(Math.random() * (maxWeeks - minWeeks + 1)) + minWeeks
     result.push({
       id: uid('cand'),
       name: `${(isFemale ? femaleNames : maleNames)[Math.floor(Math.random() * (isFemale ? femaleNames.length : maleNames.length))]} ${Math.floor(Math.random() * 99) + 1}`,
@@ -53,6 +56,7 @@ export async function generateCandidates(notoriety: number, week: number): Promi
       upkeep,
       skills: [],
       weekAppeared: week,
+      expiresOnWeek: week + durationWeeks,
     })
   }
   return result

@@ -29,6 +29,7 @@ export type Candidate = {
   upkeep: number;
   skills: string[];
   weekAppeared: number;
+  expiresOnWeek: number;
 };
 
 export type Quest = {
@@ -39,7 +40,28 @@ export type Quest = {
   reward: number;
   fame: number;
   day: number;
+  expiresOnDay: number;
   assigned?: Member[];
+};
+
+export type ExpiredQuest = {
+  id: string;
+  name: string;
+  expiredOnDay: number;
+};
+
+export type ExpiredCandidate = {
+  id: string;
+  name: string;
+  class: string;
+  expiredOnWeek: number;
+  weekAppeared?: number;
+  gender?: 'male' | 'female';
+  appearance?: string;
+  avatar?: string | null;
+  stats?: Stats;
+  upkeep?: number;
+  personality?: string;
 };
 
 export type ShopItem = {
@@ -67,6 +89,10 @@ export type GameState = {
     shopDiscount?: number;
   };
   settings: { autoAssign: boolean };
+  archives: {
+    quests: ExpiredQuest[];
+    candidates: ExpiredCandidate[];
+  };
 };
 
 

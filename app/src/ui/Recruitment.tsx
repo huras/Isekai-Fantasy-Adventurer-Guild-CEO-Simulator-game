@@ -1,11 +1,14 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import { useStore } from '../core/store'
 import { generateCandidates } from '../core/recruitment'
 import { loadPortraitManifest } from '../lib/portraits'
+import { AdventurerModal } from './AdventurerModal'
 
 export function Recruitment() {
   const { state, emit } = useStore()
   const [loading, setLoading] = useState(false)
+  const [selectedId, setSelectedId] = useState<string | null>(null)
+  const selectedCandidate = useMemo(() => state.candidates.find(x => x.id === selectedId) || null, [state.candidates, selectedId])
 
   useEffect(() => {
     (async () => { await loadPortraitManifest() })()
@@ -67,7 +70,7 @@ export function Recruitment() {
           <div className="vstack gap-2">
             {state.candidates.map(c => (
               <div key={c.id} className="d-flex justify-content-between align-items-center p-2 border rounded-3">
-                <div className="d-flex align-items-center gap-2">
+                <div className="d-flex align-items-center gap-2 clickable" onClick={() => setSelectedId(c.id)}>
                   {c.avatar && <img src={c.avatar} width={40} height={40} style={{ objectFit: 'cover', borderRadius: 8 }} />}
                   <div>
                     <div><strong>{c.name}</strong> — {c.class} · <span className="text-muted">{c.personality}</span></div>
@@ -84,8 +87,22 @@ export function Recruitment() {
           </div>
         )}
       </div>
+      <AdventurerModal open={!!selectedCandidate} onClose={() => setSelectedId(null)} adventurer={{
+        id: selectedCandidate?.id || '',
+        name: selectedCandidate?.name || '',
+        class: selectedCandidate?.class || '',
+        avatar: selectedCandidate?.avatar,
+        appearance: selectedCandidate?.appearance,
+        personality: selectedCandidate?.personality,
+        gender: selectedCandidate?.gender,
+        upkeep: selectedCandidate?.upkeep,
+        stats: selectedCandidate?.stats,
+        expiresOnWeek: selectedCandidate?.expiresOnWeek,
+        weekAppeared: selectedCandidate?.weekAppeared,
+      }} />
     </div>
   )
 }
 
 
+ 

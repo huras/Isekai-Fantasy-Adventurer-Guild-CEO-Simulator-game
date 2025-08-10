@@ -9,6 +9,7 @@ import { Quests } from './Quests'
 import { Shop } from './Shop'
 import { Battle } from './Battle'
 import { Events } from './Events'
+import { Expired } from './Expired'
 
 export function App() {
   const tabs = [
@@ -19,6 +20,7 @@ export function App() {
     { key: 'shop', label: 'Shop', icon: '🛒', render: () => <Shop /> },
     { key: 'battle', label: 'Battle', icon: '⚔️', render: () => <Battle /> },
     { key: 'events', label: 'Events', icon: '💬', render: () => <Events /> },
+    { key: 'expired', label: 'Expired', icon: '⏳', render: () => <Expired /> },
   ] as const
   return (
     <StoreProvider>
