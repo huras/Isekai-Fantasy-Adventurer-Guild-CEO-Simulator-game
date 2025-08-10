@@ -1,0 +1,32 @@
+body {
+  background-color: #0b0f14;
+  color: #e6edf3;
+}
+.card { background-color: #121a22; border-color: #1b2835; }
+.list-group-item { background-color: #10161d; color: #e6edf3; border-color: #1b2835; }
+.log-box {
+  background: #0e141a;
+  border: 1px solid #1b2835;
+  min-height: 160px;
+  max-height: 280px;
+  overflow-y: auto;
+  padding: .5rem .75rem;
+  border-radius: .5rem;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  font-size: .9rem;
+}
+.progress { height: 10px; }
+.entity-pill {
+  background: #0f1720;
+  border: 1px solid #223142;
+  border-radius: .5rem;
+  padding: .5rem .75rem;
+}
+.subtle { color: #9fb3c8; }
+.money-positive { color: #3ddc97; }
+.money-negative { color: #ff6b6b; }
+.clickable { cursor: pointer; }
+
+.btn-outline-light, .btn-outline-danger, .btn-outline-primary { --bs-btn-hover-bg: transparent; }
+
+
