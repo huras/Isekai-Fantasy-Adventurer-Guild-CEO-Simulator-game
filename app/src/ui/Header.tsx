@@ -18,7 +18,6 @@ export function Header() {
             <input className="form-check-input" type="checkbox" id="autoAssignHeader" checked={state.settings.autoAssign} onChange={e => { state.settings.autoAssign = e.target.checked; if (state.settings.autoAssign) { autoAssign(state) } emit(); }} />
             <label className="form-check-label text-light" htmlFor="autoAssignHeader">Auto-assign</label>
           </div>
-          <button className="btn btn-warning btn-sm" onClick={() => actions.nextDay()}>Next Day</button>
           <button className="btn btn-outline-light btn-sm" onClick={() => actions.save()}>Save</button>
           <button className="btn btn-outline-light btn-sm" onClick={() => actions.load()}>Load</button>
           <button className="btn btn-outline-danger btn-sm" onClick={() => actions.reset()}>Reset</button>

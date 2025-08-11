@@ -1,4 +1,4 @@
-import type { Candidate } from './types'
+import type { Candidate, InventoryItem, ShopItem } from './types'
 import { randomPortrait } from '../lib/portraits'
 
 const personalities = ['heroic', 'cunning', 'stoic', 'chaotic', 'scholar'] as const
@@ -25,7 +25,7 @@ export async function generateCandidates(notoriety: number, week: number): Promi
   for (let i = 0; i < count; i++) {
     const c = classes[Math.floor(Math.random() * classes.length)]
     const talent = Math.max(1, Math.min(10, 1 + Math.floor(notoriety / 10) + Math.floor(Math.random() * 4) - 1))
-    const isFemale = Math.random() < 0.95
+    const isFemale = Math.random() < 0.99
     const gender = isFemale ? 'female' : 'male' as const
     const genderIcon = isFemale ? '♀️' : '♂️'
     const race = races[Math.floor(Math.random() * races.length)]
@@ -44,6 +44,19 @@ export async function generateCandidates(notoriety: number, week: number): Promi
     const minWeeks = 1
     const maxWeeks = 4
     const durationWeeks = Math.floor(Math.random() * (maxWeeks - minWeeks + 1)) + minWeeks
+    const starterSkills = (
+      c.k === 'Warrior' ? ['Slash'] :
+      c.k === 'Mage' ? ['Fireball'] :
+      c.k === 'Rogue' ? ['Backstab'] :
+      c.k === 'Cleric' ? ['Heal'] :
+      ['Aim']
+    )
+    // TEMP: give each candidate 1 random stackable item from catalog-like pool by id
+    const starterItemIds = [
+      '1', '1754849867652', '1754864404298', '1754864425962', '1754864563561', '1754864578481', '1754879231663'
+    ] as const
+    const starterItems: InventoryItem[] = [{ id: starterItemIds[Math.floor(Math.random() * starterItemIds.length)], qty: 1 }]
+
     result.push({
       id: uid('cand'),
       name: `${(isFemale ? femaleNames : maleNames)[Math.floor(Math.random() * (isFemale ? femaleNames.length : maleNames.length))]} ${Math.floor(Math.random() * 99) + 1}`,
@@ -54,9 +67,10 @@ export async function generateCandidates(notoriety: number, week: number): Promi
       avatar: randomPortrait(),
       stats: { str, int, agi, spr, hp, speed },
       upkeep,
-      skills: [],
+      skills: starterSkills,
       weekAppeared: week,
       expiresOnWeek: week + durationWeeks,
+      starterItems,
     })
   }
   return result

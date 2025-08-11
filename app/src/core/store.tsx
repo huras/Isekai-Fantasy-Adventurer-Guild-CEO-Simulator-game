@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useEffect, useMemo, useReducer } from 'react'
-import type { GameState, Member, ShopItem } from './types'
+import type { BattleActor, BattleState, GameState, Member, ShopItem, InventoryItem } from './types'
 import { generateCandidates } from './recruitment'
-import { advanceMissionsOneDay, autoAssign, generateQuestList } from './quests'
+import { advanceMissionsOneDay, autoAssign, generateQuestList, createBattleFromMission } from './quests'
 import { dailyUpkeep, spendMoney } from './money'
 // import { generateInitialShop } from './items'
 
@@ -39,6 +39,7 @@ function reducer(state: GameState, action: Action): GameState {
 
 const defaultStore: { state: GameState; emit: () => void; actions: {
   nextDay: () => void; save: () => void; load: () => void; reset: () => void; serveBreakfast: () => void;
+  battleAttack: () => void; battleDefend: () => void; battleUseItem: () => void; battleEnemyTurn: () => void; battleContinue: () => void;
 } } = {
   state: {
     day: 1,
@@ -60,7 +61,7 @@ const defaultStore: { state: GameState; emit: () => void; actions: {
     settings: { autoAssign: false },
   },
   emit: () => {},
-  actions: { nextDay: () => {}, save: () => {}, load: () => {}, reset: () => {}, serveBreakfast: () => {} },
+  actions: { nextDay: () => {}, save: () => {}, load: () => {}, reset: () => {}, serveBreakfast: () => {}, battleAttack: () => {}, battleDefend: () => {}, battleUseItem: () => {}, battleEnemyTurn: () => {}, battleContinue: () => {} },
 }
 
 const StoreContext = createContext(defaultStore)
@@ -77,7 +78,14 @@ export function StoreProvider({ children, initial }: { children: React.ReactNode
         id: 'player', isPlayer: true, name: 'You', class: 'Guildmaster', personality: 'heroic', gender: 'male',
         appearance: '♂️ Summoned human with dark hair and determined eyes; beauty 7/10',
         upkeep: 0, stats: { str: 6, int: 6, agi: 6, spr: 6 }, hpMax: 40, hp: 40, speed: 3, skills: ['Leadership', 'Tactics'],
-        items: [ { id: 'starter_weapon', name: 'Starter Sword', price: 0, category: 'weapon', sprite: { row: 5, col: 0 }, apply() {} } ],
+        // Ensure Guildmaster starts with specific items (Short Sword + two fruits) using stubs until catalog loads.
+        items: [
+          { id: '1754878147635' },
+          { id: '1754878147635' },
+          { id: '1754864404298' },
+          { id: '1754864404298' },
+          { id: '1754864404298' },
+        ] as InventoryItem[],
       }
       // Direct mutate then emit for simplicity
       ;(state.members as Member[]).push(player)
@@ -125,6 +133,12 @@ export function StoreProvider({ children, initial }: { children: React.ReactNode
         state.shop = state.itemsCatalog.filter(i => (i as any).sellable)
         console.log('[ItemsLoader] derived shop count:', state.shop.length)
         state.itemsLoaded = true
+        // No need to sync member item objects; inventory stores only references (id/qty)
+        const gm = state.members.find(m => m.isPlayer)
+        if (gm && Array.isArray(gm.items)) {
+          // Ensure quantities default
+          gm.items = gm.items.map((it: any) => ({ id: it.id, qty: it.qty || 1 })) as any
+        }
         console.log('[ItemsLoader] itemsLoaded set to true')
         dispatch({ type: 'emit' })
       }
@@ -152,7 +166,53 @@ export function StoreProvider({ children, initial }: { children: React.ReactNode
   }
 
   const actions = useMemo(() => ({
+    acceptCandidate(id: string) {
+      const idx = state.candidates.findIndex(c => c.id === id)
+      if (idx === -1) return
+      const c = state.candidates.splice(idx, 1)[0]
+      const hpMax = c.stats.hp ?? 20
+      const mpMax = 10 + Math.floor((c.stats.spr ?? 3) / 2)
+      const recruitBonus = state.modifiers.recruitStatBonus || 0
+      const member: Member = {
+        id: `mem_${Math.random().toString(36).slice(2, 9)}`,
+        name: c.name,
+        class: c.class,
+        personality: c.personality,
+        gender: c.gender,
+        appearance: c.appearance,
+        avatar: c.avatar,
+        upkeep: c.upkeep,
+        stats: {
+          str: c.stats.str + recruitBonus,
+          int: c.stats.int + recruitBonus,
+          agi: c.stats.agi + recruitBonus,
+          spr: c.stats.spr + recruitBonus,
+        },
+        hpMax,
+        hp: hpMax,
+        mpMax,
+        mp: mpMax,
+        speed: Math.max(1, Math.floor(((c.stats.agi ?? 3) + recruitBonus) / 3)),
+        skills: c.skills || [],
+        baseLevel: 1,
+        baseExp: 0,
+        classLevel: 1,
+        classExp: 0,
+        skillLevels: (c.skills || []).reduce<Record<string, number>>((acc, s) => { acc[s] = 1; return acc }, {}),
+        skillExp: {},
+        alive: true,
+        items: (c.starterItems || []).map(it => ({ id: it.id, qty: it.qty || 1 })),
+      }
+      state.members.push(member)
+      // No emit here; caller should emit to keep patterns uniform
+    },
     async nextDay() {
+      // If a battle is active, do not advance day; battles resolve via actions
+      if (state.battle) {
+        state.logs.events.unshift('⚔️ Ongoing battle prevents the day from advancing.')
+        dispatch({ type: 'emit' })
+        return
+      }
       // Advance day and compute current week
       state.day += 1
       const previousWeek = state.week
@@ -231,6 +291,115 @@ export function StoreProvider({ children, initial }: { children: React.ReactNode
         autoAssign(state)
       }
 
+      dispatch({ type: 'emit' })
+    },
+    battleAttack(): void {
+      const b = state.battle
+      if (!b || state.isGameOver) return
+      if (b.turnSide !== 'ally') return
+      const actor = b.allies[b.turnIndex % b.allies.length]
+      if (!actor || actor.hp <= 0) { b.turnIndex = (b.turnIndex + 1) % b.allies.length; return this.battleAttack() }
+      // Pick first alive enemy
+      const targetIdx = b.enemies.findIndex(e => e.hp > 0)
+      if (targetIdx < 0) return
+      const target = b.enemies[targetIdx]
+      const dmg = Math.max(1, Math.floor((actor.power ?? 8) * (0.8 + Math.random() * 0.6)))
+      target.hp = Math.max(0, target.hp - dmg)
+      b.log.unshift(`${actor.name} hits ${target.name} for ${dmg}`)
+      if (b.enemies.every(e => e.hp <= 0)) {
+        b.log.unshift('Enemies defeated!')
+        // Signal continue to next wave or finish
+        this.battleContinue()
+        dispatch({ type: 'emit' })
+        return
+      }
+      // Next ally or enemies turn
+      b.turnIndex += 1
+      if (b.turnIndex >= b.allies.length) {
+        b.turnSide = 'enemy'; b.turnIndex = 0
+        // Enemy auto-turns
+        this.battleEnemyTurn()
+      }
+      dispatch({ type: 'emit' })
+    },
+    battleDefend(): void {
+      const b = state.battle
+      if (!b || state.isGameOver) return
+      if (b.turnSide !== 'ally') return
+      const actor = b.allies[b.turnIndex % b.allies.length]
+      if (!actor || actor.hp <= 0) { b.turnIndex = (b.turnIndex + 1) % b.allies.length; return this.battleDefend() }
+      b.log.unshift(`${actor.name} braces for impact (defend).`)
+      // Simple defend: small heal
+      actor.hp = Math.min(actor.hpMax, actor.hp + 2)
+      b.turnIndex += 1
+      if (b.turnIndex >= b.allies.length) { b.turnSide = 'enemy'; b.turnIndex = 0; this.battleEnemyTurn() }
+      dispatch({ type: 'emit' })
+    },
+    battleUseItem(): void {
+      const b = state.battle
+      if (!b || state.isGameOver) return
+      if (b.turnSide !== 'ally') return
+      const actor = b.allies[b.turnIndex % b.allies.length]
+      if (!actor) return
+      // Find a potion in inventory
+      const idx = state.inventory.findIndex(it => it.category === 'potion')
+      if (idx < 0) { b.log.unshift('No usable items.'); dispatch({ type: 'emit' }); return }
+      const it = state.inventory[idx]
+      state.inventory.splice(idx, 1)
+      const heal = 10
+      actor.hp = Math.min(actor.hpMax, actor.hp + heal)
+      b.log.unshift(`${actor.name} uses ${it.name} and heals ${heal}.`)
+      b.turnIndex += 1
+      if (b.turnIndex >= b.allies.length) { b.turnSide = 'enemy'; b.turnIndex = 0; this.battleEnemyTurn() }
+      dispatch({ type: 'emit' })
+    },
+    battleEnemyTurn(): void {
+      const b = state.battle
+      if (!b || state.isGameOver) return
+      if (b.turnSide !== 'enemy') return
+      const actor = b.enemies[b.turnIndex % b.enemies.length]
+      if (!actor || actor.hp <= 0) { b.turnIndex = (b.turnIndex + 1) % b.enemies.length; return this.battleEnemyTurn() }
+      // Target first alive ally
+      const targetIdx = b.allies.findIndex(a => a.hp > 0)
+      if (targetIdx < 0) return
+      const target = b.allies[targetIdx]
+      const dmg = Math.max(1, Math.floor((actor.power ?? 7) * (0.8 + Math.random() * 0.6)))
+      target.hp = Math.max(0, target.hp - dmg)
+      b.log.unshift(`${actor.name} hits ${target.name} for ${dmg}`)
+      if (b.allies.every(a => a.hp <= 0)) {
+        b.log.unshift('Your party has been defeated...')
+        state.isGameOver = true
+        state.logs.events.unshift('💀 Battle lost. Game Over.')
+        dispatch({ type: 'emit' })
+        return
+      }
+      // Next enemy or allies turn
+      b.turnIndex += 1
+      if (b.turnIndex >= b.enemies.length) { b.turnSide = 'ally'; b.turnIndex = 0 }
+      dispatch({ type: 'emit' })
+    },
+    battleContinue(): void {
+      const b = state.battle
+      if (!b) return
+      // Find mission and decrement remaining battles
+      const m = state.activeMissions.find(mm => mm.id === b.missionId)
+      if (!m) { state.battle = null; return }
+      // Mark cleared
+      m.battlesCleared = (m.battlesCleared || 0) + 1
+      // Decrement one cleared wave from remaining
+      m.battlesRemaining = Math.max(0, (m.battlesRemaining || 0) - 1)
+      if ((m.battlesRemaining ?? 0) > 0) {
+        // Spawn next wave
+        const next = createBattleFromMission(m, (b.wave || 1) + 1, m.battlesPlanned || (b.wavesTotal || 1))
+        state.battle = next
+        state.logs.events.unshift('⚔️ A new wave approaches!')
+      } else {
+        // Clear battle and resume mission progression next day
+        state.logs.events.unshift('⚔️ Battle concluded. Quest combat cleared.')
+        // Ensure counters are consistent
+        m.battlesCleared = m.battlesPlanned || m.battlesCleared || 0
+        state.battle = null
+      }
       dispatch({ type: 'emit' })
     },
     serveBreakfast() {

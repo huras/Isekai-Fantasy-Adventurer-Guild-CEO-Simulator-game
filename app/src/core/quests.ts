@@ -1,4 +1,4 @@
-import type { ActiveMission, DifficultyRank, GameState, JobKind, Member, Quest, TargetKind } from './types'
+import type { ActiveMission, BattleActor, BattleState, DifficultyRank, GameState, JobKind, Member, Quest, TargetKind } from './types'
 import { dailyUpkeep } from './money'
 
 function uid(prefix = 'quest') { return `${prefix}_${Math.random().toString(36).slice(2, 9)}` }
@@ -77,8 +77,8 @@ function diffRangeForRank(rank: DifficultyRank): [number, number] {
 // Keep emojis minimal and meaningful (single per quest based on job)
 const JOB_EMOJI: Record<JobKind, string> = { Find: '🔎', Deliver: '📦', Escort: '🛡️', Protect: '🛡️', Kill: '⚔️' }
 const PERSON_SEEDS = ['Noble', 'Scholar', 'Merchant', 'Priest', 'Runaway', 'Guard Captain']
-const MONSTER_SEEDS = ['Slime', 'Goblin', 'Bandit', 'Wolf', 'Ogre', 'Vampire']
-const ITEM_SEEDS = ['Ancient Relic', 'Love Letter', 'Healing Tonic', 'Encrypted Ledger', 'Dragon Egg', 'Lost Parcel']
+const MONSTER_SEEDS = ['Pink Slime', 'Wolf', 'Goblin', 'Bandit', 'Orc', 'Blue Slime', 'Warg', 'Vampire', 'Dragon']
+const ITEM_SEEDS = ['Potion', 'Chest', 'Exotic Food', 'Weapon', 'Art Object', 'Legendary Item']
 const LOCATION_SEEDS = ['Abandoned Mine', 'Cursed Chapel', 'Haunted Library', 'Forest Shrine', 'Mountain Pass', 'Sunken Ruins']
 
 function randomOf<T>(arr: T[]): T { return arr[Math.floor(Math.random() * arr.length)] }
@@ -116,6 +116,23 @@ export function generateQuestList(notoriety: number, day: number): Quest[] {
     list.push(proceduralQuest(notoriety, day))
   }
   return list
+}
+
+function createEnemiesForMission(m: ActiveMission): BattleActor[] {
+  const count = Math.max(1, Math.floor(m.diff / 4))
+  const enemies: BattleActor[] = []
+  for (let i = 0; i < count; i++) {
+    const name = m.target === 'Monster' ? randomOf(MONSTER_SEEDS) : m.target === 'Person' ? 'Bandit' : 'Guard'
+    const hpMax = 12 + Math.floor(m.diff * 2.5)
+    enemies.push({ id: uid('enemy'), name, hp: hpMax, hpMax, power: 6 + Math.floor(m.diff / 2) })
+  }
+  return enemies
+}
+
+export function createBattleFromMission(m: ActiveMission, wave: number, wavesTotal: number): BattleState {
+  const allies: BattleActor[] = m.party.filter(p => p.alive !== false).map(p => ({ id: p.id, name: p.name, hp: p.hp ?? p.hpMax, hpMax: p.hpMax, mp: p.mp, mpMax: p.mpMax, power: calculateMemberPower(p) }))
+  const enemies = createEnemiesForMission(m)
+  return { missionId: m.id, questName: m.name, diff: m.diff, wave, wavesTotal, allies, enemies, turnSide: 'ally', turnIndex: 0, log: [`Battle begins — Wave ${wave}/${wavesTotal}`] }
 }
 
 // No name-based typing; type is derived in the generator
@@ -178,11 +195,22 @@ export function runQuest(state: GameState, questId: string) {
     party: party.map(p => ({ ...p })),
     log: [`🏁 Party departed for ${quest.name} (${duration}d).`] ,
   }
+  // Seed battlesRemaining based on quest job
+  const job = (quest.job || 'Find')
+  const waves = job === 'Kill' ? 1 + Math.floor(Math.random() * 2) : (job === 'Escort' || job === 'Protect') ? Math.floor(Math.random() * 3) : 0
+  mission.battlesPlanned = waves
+  mission.battlesRemaining = waves
+  mission.battlesCleared = 0
   state.activeMissions = state.activeMissions || []
   state.activeMissions.unshift(mission)
   state.logs.events.unshift(`🧭 ${party.length} set out: ${quest.name}`)
   // Remove quest from board
   state.quests = state.quests.filter(q => q.id !== questId)
+  // If combat is planned, start the first battle immediately and block day progression
+  if (waves > 0 && !state.battle) {
+    state.battle = createBattleFromMission(mission, 1, waves)
+    state.logs.events.unshift(`⚔️ Battle begins during ${mission.name}!`)
+  }
 }
 
 export function autoAssign(state: GameState) {
@@ -217,9 +245,21 @@ export function autoAssign(state: GameState) {
 
 export function advanceMissionsOneDay(state: GameState) {
   if (!state.activeMissions) return
+  // If a battle is in progress, skip mission day resolution
+  if (state.battle) return
   const finished: ActiveMission[] = []
   const survivors: ActiveMission[] = []
   for (const m of state.activeMissions) {
+    // Start a battle if needed
+    if ((m.battlesRemaining ?? 0) > 0) {
+      const total = m.battlesPlanned || m.battlesRemaining || 1
+      // Consume one now and create battle
+      // Do not decrement here; decrement on wave clear to keep wave index stable on resume
+      state.battle = createBattleFromMission(m, (m.battlesCleared || 0) + 1, total)
+      state.logs.events.unshift(`⚔️ A battle erupts during ${m.name}!`)
+      // Only one battle at a time
+      return
+    }
     // Daily attrition: damage and mana usage
     const party = m.party
     const dayLog: string[] = []
@@ -293,23 +333,18 @@ export function advanceMissionsOneDay(state: GameState) {
     if (dayLog.length) m.log.unshift(dayLog.join(' · '))
 
     if (state.day >= m.endOnDay) {
-      // Resolve mission outcome based on surviving party power
-      const aliveParty = party.filter(p => p.alive !== false)
-      const teamPower = aliveParty.map(calculateMemberPower).reduce((a, b) => a + b, 0)
-      const target = m.diff * 10
-      const bonus = state.modifiers.questSuccessBonus || 0
-      let successChance = Math.max(10, Math.min(90, Math.round((teamPower / target) * 60 + 20 + bonus)))
-      successChance = Math.max(5, Math.min(95, successChance))
-      const roll = Math.floor(Math.random() * 100) + 1
-      const success = roll <= successChance
-      if (success) {
+      // Quest succeeds only if all planned battles were won
+      const battlesCleared = m.battlesCleared || 0
+      const battlesPlanned = m.battlesPlanned || 0
+      const combatSatisfied = battlesCleared >= battlesPlanned
+      if (combatSatisfied) {
         state.money = Math.max(0, Math.floor(state.money + m.reward))
         state.notoriety = Math.max(0, Math.floor(state.notoriety + m.fame))
-        m.log.unshift(`✅ Completed. +${m.reward}g, +${m.fame} notoriety (roll ${roll}/${successChance}%)`)
+        m.log.unshift(`✅ Completed. +${m.reward}g, +${m.fame} notoriety`)
         state.logs.events.unshift(`🏆 Mission complete: ${m.name} — +${m.reward}g, +${m.fame} fame`)
       } else {
-        m.log.unshift(`❌ Failed (roll ${roll}/${successChance}%)`)
-        state.logs.events.unshift(`💥 Mission failed: ${m.name}`)
+        m.log.unshift(`❌ Failed — combat objectives not cleared (${battlesCleared}/${battlesPlanned})`)
+        state.logs.events.unshift(`💥 Mission failed: ${m.name} — combat not cleared`)
       }
       // Handle fallen
       for (const member of party) {

@@ -5,8 +5,20 @@ import { AdventurerModal } from './AdventurerModal'
 
 export function Quests() {
   const { state, emit } = useStore()
+  const inBattle = !!state.battle
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const selectedMember = useMemo(() => state.members.find(x => x.id === selectedId) || null, [state.members, selectedId])
+  const unassigned = useMemo(() => {
+    const assignedIds = new Set<string>()
+    for (const q of state.quests) {
+      for (const m of q.assigned || []) assignedIds.add(m.id)
+    }
+    const onMissionIds = new Set<string>()
+    for (const m of state.activeMissions || []) {
+      for (const p of m.party || []) onMissionIds.add(p.id)
+    }
+    return state.members.filter(m => m.alive !== false && !assignedIds.has(m.id) && !onMissionIds.has(m.id))
+  }, [state.members, state.quests, state.activeMissions])
 
   function refresh() {
     // Append more quests for the current day without resetting existing list
@@ -45,28 +57,66 @@ export function Quests() {
         <div className="d-flex justify-content-between align-items-center mb-2">
           <h5 className="card-title mb-0">Available Quests</h5>
           <div className="d-flex gap-2">
-            <button className="btn btn-sm btn-outline-success" onClick={runAllAssigned} disabled={state.quests.every(q => (q.assigned || []).length === 0)}>Run all assigned</button>
-            <button className="btn btn-sm btn-primary" onClick={refresh}>Refresh</button>
+             <button className="btn btn-sm btn-outline-success" onClick={runAllAssigned} disabled={inBattle || state.quests.every(q => (q.assigned || []).length === 0)}>Run all assigned</button>
+             <button className="btn btn-sm btn-primary" onClick={refresh} disabled={inBattle}>Refresh</button>
           </div>
         </div>
+        {unassigned.length > 0 && (
+          <div className="mb-3">
+            <div className="small text-muted mb-1">Available Adventurers ({unassigned.length})</div>
+            <div className="d-flex flex-wrap gap-2">
+              {unassigned.map(m => (
+                <div
+                  key={m.id}
+                  className="d-flex align-items-center justify-content-center border"
+                  style={{ width: 36, height: 36, borderRadius: '50%', overflow: 'hidden', cursor: 'pointer' }}
+                  title={`${m.name} — ${m.class}`}
+                  onClick={() => setSelectedId(m.id)}
+                >
+                  {m.avatar ? (
+                    <img src={m.avatar} width={36} height={36} style={{ objectFit: 'cover' }} />
+                  ) : (
+                    <span className="small text-muted">
+                      {m.name.split(' ').map(s => s[0]).join('').slice(0, 2).toUpperCase()}
+                    </span>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
         {state.quests.length === 0 ? (
           <div className="text-muted">No quests available. Click Refresh.</div>
         ) : (
-          <div className="vstack gap-2">
+          <div className="row g-2">
             {state.quests.map(q => (
-              <div key={q.id} className="p-2 border rounded-3">
+              <div key={q.id} className="col-12 col-md-6 col-lg-4">
+                <div className="p-2 border rounded-3 h-100 d-flex flex-column">
                 <div className="d-flex justify-content-between align-items-center">
                   <div>
                     <strong>{q.name}</strong>
                     <span className="text-muted small ms-1">· {q.emoji || '🧭'} Rank {q.rank || 'H'} · Diff {q.diff} · Reward {q.reward}g · Fame +{q.fame}</span>
                     <span className="text-muted small ms-1">· Expires D{q.expiresOnDay}</span>
+                    {(() => {
+                      const total = Math.max(0, (q.expiresOnDay - q.day))
+                      const denom = Math.max(0, total - 1) // full on the last available day
+                      const elapsed = Math.max(0, (state.day - q.day))
+                      const ratio = denom <= 0 ? 1 : Math.max(0, Math.min(1, elapsed / denom))
+                      const pct = Math.round(ratio * 100)
+                      const barClass = ratio > 0.66 ? 'bg-danger' : ratio > 0.33 ? 'bg-warning' : 'bg-success'
+                      return (
+                        <div className="progress mt-1" style={{ height: 6, width: 160 }}>
+                          <div className={`progress-bar ${barClass}`} role="progressbar" style={{ width: `${pct}%` }} aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100} />
+                        </div>
+                      )
+                    })()}
                     {q.daysRequired && <span className="text-muted small ms-1">· Trip {q.daysRequired}d</span>}
                     {q.desc && <div className="small text-muted">{q.desc}</div>}
                     {Array.isArray(q.tags) && q.tags.length > 0 && (
                       <span className="ms-2 small">{q.tags.slice(0, 3).map(t => `[#${t}]`).join(' ')}</span>
                     )}
                   </div>
-                  <button className="btn btn-sm btn-outline-success" onClick={() => run(q.id)}>Run</button>
+                  <button className="btn btn-sm btn-outline-success" onClick={() => run(q.id)} disabled={inBattle}>Run</button>
                 </div>
                 <div className="mt-2 d-flex align-items-center flex-wrap gap-2">
                   {(q.assigned || []).map(m => (
@@ -102,6 +152,7 @@ export function Quests() {
                     </ul>
                   </div>
                 </div>
+                </div>
               </div>
             ))}
           </div>
@@ -117,11 +168,19 @@ export function Quests() {
                       <strong>{m.name}</strong>
                       <span className="text-muted small ms-1">· {m.emoji || '🧭'} Rank {m.rank || 'H'} · Diff {m.diff} · Ends D{m.endOnDay}</span>
                       <span className="text-muted small ms-1">· Party {m.party.length}</span>
+                      <span className="text-muted small ms-1">
+                        · {typeof m.battlesPlanned === 'number' && m.battlesPlanned > 0
+                          ? `Combat ${m.battlesCleared || 0}/${m.battlesPlanned}`
+                          : 'Combat none'}
+                      </span>
+                      {(state.battle && state.battle.missionId === m.id) && (
+                        <span className="badge text-bg-warning ms-2">In battle</span>
+                      )}
                     </div>
                   </div>
                   <div className="mt-2 d-flex align-items-center flex-wrap gap-2">
                     {m.party.map(p => (
-                      <span key={p.id} className={`badge ${p.alive === false ? 'text-bg-danger' : 'text-bg-secondary'} d-inline-flex align-items-center gap-1`}>
+                      <span key={p.id} className={`badge ${p.alive === false ? 'text-bg-danger' : 'text-bg-secondary'} d-inline-flex align-items-center gap-1`} onClick={() => setSelectedId(p.id)} style={{ cursor: 'pointer' }}>
                         {p.avatar && <img src={p.avatar} width={16} height={16} style={{ objectFit: 'cover', borderRadius: 3 }} />}
                         {p.name} {p.alive === false ? '☠️' : `❤️${p.hp}/${p.hpMax}${typeof p.mp === 'number' ? ` 🔷${p.mp}/${p.mpMax}` : ''}`}
                       </span>

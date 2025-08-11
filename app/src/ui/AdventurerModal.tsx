@@ -1,5 +1,7 @@
-import React from 'react'
-import type { ShopItem, Stats } from '../core/types'
+import React, { useMemo, useRef, useState } from 'react'
+import { getSpriteStyleFromUrl } from '../core/items'
+import type { InventoryItem, ShopItem, Stats } from '../core/types'
+import { useStore } from '../core/store'
 
 type AdventurerLike = {
   id: string
@@ -29,6 +31,86 @@ function computePower(stats?: Stats, speed?: number): number | null {
 
 export function AdventurerModal({ open, onClose, adventurer }: { open: boolean; onClose: () => void; adventurer: AdventurerLike }) {
   if (!open) return null
+  const { state, emit } = useStore()
+  const memberRef = useMemo(() => state.members.find(m => m.id === adventurer.id) || null, [state.members, adventurer.id])
+  const catalog = state.itemsCatalog
+  const [selectedIdx, setSelectedIdx] = useState<number | null>(null)
+
+  // Drag & drop handlers
+  const dragFrom = useRef<number | null>(null)
+  function onDragStart(idx: number) { dragFrom.current = idx }
+  function onDragOver(e: React.DragEvent) { e.preventDefault() }
+  function onDrop(idx: number) {
+    if (!memberRef) return
+    const from = dragFrom.current
+    dragFrom.current = null
+    if (from === null || from === idx) return
+    const items = (memberRef.items = memberRef.items || []) as unknown as InventoryItem[]
+    while (items.length < 12) items.push(undefined as unknown as ShopItem)
+    const a = items[from]
+    const b = items[idx]
+    // Attempt stacking when same id and stackable in catalog
+    if (a && b && a.id === b.id) {
+      const cat = catalog.find(ci => ci.id === a.id)
+      if ((cat as any)?.stackable) {
+        b.qty = (b.qty || 1) + (a.qty || 1)
+        items[from] = undefined as unknown as InventoryItem
+      } else {
+        // non-stackable, just swap
+        items[from] = b
+        items[idx] = a
+      }
+    } else if (a && !b) {
+      // move to empty slot
+      items[idx] = a
+      items[from] = undefined as unknown as InventoryItem
+    } else {
+      // swap different items
+      items[from] = b
+      items[idx] = a
+    }
+    for (let i = items.length - 1; i >= 0; i--) {
+      if (items[i]) { items.length = i + 1; break }
+      if (i === 0) items.length = 0
+    }
+    emit()
+  }
+
+  function swapOrSelectSlot(targetIdx: number, e?: React.MouseEvent) {
+    if (!memberRef) return
+    // Shift-click to split stack
+    if (e && (e as any).shiftKey) {
+      const items = (memberRef.items = memberRef.items || []) as unknown as InventoryItem[]
+      const src = items[targetIdx]
+      if (!src || (src.qty || 1) <= 1) return
+      const emptyIdx = items.findIndex(x => !x)
+      if (emptyIdx === -1) return
+      const half = Math.floor((src.qty || 1) / 2)
+      src.qty = (src.qty || 1) - half
+      items[emptyIdx] = { id: src.id, qty: half }
+      emit()
+      return
+    }
+    const items = (memberRef.items = memberRef.items || []) as unknown as InventoryItem[]
+    // normalize to 12 slots (sparse ok)
+    while (items.length < 12) items.push(undefined as unknown as ShopItem)
+    if (selectedIdx === null) {
+      if (items[targetIdx]) setSelectedIdx(targetIdx)
+      return
+    }
+    if (selectedIdx === targetIdx) { setSelectedIdx(null); return }
+    const a = items[selectedIdx]
+    const b = items[targetIdx]
+    items[selectedIdx] = b
+    items[targetIdx] = a
+    // trim trailing empties
+    for (let i = items.length - 1; i >= 0; i--) {
+      if (items[i]) { items.length = i + 1; break }
+      if (i === 0) items.length = 0
+    }
+    setSelectedIdx(null)
+    emit()
+  }
   const power = computePower(adventurer.stats, adventurer.speed)
   return (
     <div
@@ -95,11 +177,47 @@ export function AdventurerModal({ open, onClose, adventurer }: { open: boolean; 
                 )}
                 {Array.isArray(adventurer.items) && (
                   <div className="mb-2">
-                    <div className="fw-bold mb-1">Items ({adventurer.items.length}/12)</div>
-                    <div className="d-flex flex-wrap gap-1">
-                      {adventurer.items.slice(0, 12).map((it) => (
-                        <span key={it.id} className="badge text-bg-light border">{it.name}</span>
-                      ))}
+                    <div className="fw-bold mb-1">Inventory ({(adventurer.items.filter(Boolean) as InventoryItem[]).reduce((n, it) => n + (it.qty || 1), 0)}/12)</div>
+                    {memberRef && (
+                      <div className="small text-muted mb-1">Drag to move. Drag onto same item to stack. Shift-click stack to split.</div>
+                    )}
+                    <div className="d-flex flex-wrap gap-2">
+                      {Array.from({ length: 12 }).map((_, idx) => {
+                        const ref = adventurer.items![idx] as unknown as InventoryItem | undefined
+                        if (ref) {
+                          const cat = catalog.find(ci => ci.id === ref.id)
+                          const style = cat ? getSpriteStyleFromUrl(cat.sprite, (cat as any).tilesetUrl || '') : undefined
+                          return (
+                            <div
+                              key={idx}
+                              className={`border rounded d-flex flex-column align-items-center p-1 ${selectedIdx === idx ? 'border-2 border-warning' : ''}`}
+                              style={{ width: 95, cursor: memberRef ? 'grab' : 'default' }}
+                              title={cat?.name || ref.id}
+                              draggable={!!memberRef}
+                              onDragStart={() => onDragStart(idx)}
+                              onDragOver={onDragOver}
+                              onDrop={() => onDrop(idx)}
+                              onClick={(e) => swapOrSelectSlot(idx, e)}
+                            >
+                              <div style={style} />
+                              <div className="small text-truncate">{cat?.name || ref.id}{(ref.qty || 1) > 1 ? ` ×${ref.qty}` : ''}</div>
+                            </div>
+                          )
+                        }
+                        return (
+                          <div
+                            key={idx}
+                            className={`border rounded d-flex align-items-center justify-content-center text-muted ${selectedIdx === idx ? 'border-2 border-warning' : ''}`}
+                            style={{ width: 95, height: 75, cursor: memberRef ? 'copy' : 'default' }}
+                            title="Empty slot"
+                            onDragOver={onDragOver}
+                            onDrop={() => onDrop(idx)}
+                            onClick={(e) => swapOrSelectSlot(idx, e)}
+                          >
+                            –
+                          </div>
+                        )
+                      })}
                     </div>
                   </div>
                 )}

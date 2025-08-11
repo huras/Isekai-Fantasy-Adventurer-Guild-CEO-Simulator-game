@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react'
+import { useStore } from '../core/store'
 
-type Tab = { key: string; label: string; icon?: string; render: () => React.ReactNode }
+type Tab = { key: string; label: string; icon?: string; render: () => React.ReactNode; highlight?: boolean }
 
 function normalizeHash() {
   const raw = (window.location.hash || '').replace(/^#/, '')
@@ -11,6 +12,8 @@ function normalizeHash() {
 }
 
 export function Tabs({ tabs }: { tabs: Tab[] }) {
+  const { state } = useStore()
+  const inBattle = !!state.battle
   const keys = useMemo(() => tabs.map(t => t.key), [tabs])
   const defaultKey = tabs[0]?.key || 'dashboard'
   const initial = (() => {
@@ -39,7 +42,17 @@ export function Tabs({ tabs }: { tabs: Tab[] }) {
         <div className="col-12 col-lg-3">
           <div className="list-group">
             {tabs.map(t => (
-              <a key={t.key} href={`#${t.key}`} className={`list-group-item list-group-item-action${active === t.key ? ' active' : ''}`} onClick={e => { e.preventDefault(); setActive(t.key) }}>
+              <a
+                key={t.key}
+                href={`#${t.key}`}
+                className={`list-group-item list-group-item-action${active === t.key ? ' active' : ''} ${t.highlight ? 'list-group-item-warning' : ''} ${inBattle && t.key !== 'battle' ? 'disabled' : ''}`}
+                aria-disabled={inBattle && t.key !== 'battle'}
+                onClick={e => {
+                  e.preventDefault()
+                  if (inBattle && t.key !== 'battle') return
+                  setActive(t.key)
+                }}
+              >
                 {t.icon ? `${t.icon} ` : ''}{t.label}
               </a>
             ))}

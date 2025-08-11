@@ -10,7 +10,8 @@
       "col": 0
     },
     "tilesetUrl": "/items/tileset_1.png",
-    "sellable": true
+    "sellable": true,
+    "stackable": true
   },
   {
     "id": "1754849867652",
@@ -23,7 +24,8 @@
       "col": 1
     },
     "tilesetUrl": "/items/tileset_1.png",
-    "sellable": true
+    "sellable": true,
+    "stackable": true
   },
   {
     "id": "1754864404298",
@@ -35,7 +37,8 @@
       "col": 6
     },
     "tilesetUrl": "/items/tileset_1.png",
-    "sellable": true
+    "sellable": true,
+    "stackable": true
   },
   {
     "id": "1754864425962",
@@ -47,7 +50,8 @@
       "col": 11
     },
     "tilesetUrl": "/items/tileset_1.png",
-    "sellable": true
+    "sellable": true,
+    "stackable": true
   },
   {
     "id": "1754864563561",
@@ -59,7 +63,8 @@
       "col": 12
     },
     "tilesetUrl": "/items/tileset_1.png",
-    "sellable": true
+    "sellable": true,
+    "stackable": true
   },
   {
     "id": "1754864578481",
@@ -72,7 +77,8 @@
       "col": 7
     },
     "tilesetUrl": "/items/tileset_1.png",
-    "sellable": true
+    "sellable": true,
+    "stackable": true
   },
   {
     "id": "1754878147635",
@@ -84,7 +90,8 @@
       "col": 0
     },
     "tilesetUrl": "/items/tileset_1.png",
-    "sellable": true
+    "sellable": true,
+    "stackable": true
   },
   {
     "id": "1754878159603",
@@ -96,7 +103,8 @@
       "col": 1
     },
     "tilesetUrl": "/items/tileset_1.png",
-    "sellable": true
+    "sellable": true,
+    "stackable": true
   },
   {
     "id": "1754878173083",
@@ -108,7 +116,8 @@
       "col": 5
     },
     "tilesetUrl": "/items/tileset_1.png",
-    "sellable": true
+    "sellable": true,
+    "stackable": true
   },
   {
     "id": "1754879231663",
@@ -118,6 +127,111 @@
     "sprite": {
       "row": 1,
       "col": 9
+    },
+    "tilesetUrl": "/items/tileset_1.png",
+    "sellable": true,
+    "stackable": true
+  },
+  {
+    "id": "1754886749483",
+    "name": "Orage",
+    "desc": "A orage.",
+    "price": 6,
+    "category": "food",
+    "sprite": {
+      "row": 0,
+      "col": 4
+    },
+    "tilesetUrl": "/items/tileset_1.png",
+    "sellable": true
+  },
+  {
+    "id": "1754886769579",
+    "name": "Gree Grapes",
+    "desc": "Bem azedas.",
+    "price": 3,
+    "category": "food",
+    "sprite": {
+      "row": 0,
+      "col": 5
+    },
+    "tilesetUrl": "/items/tileset_1.png",
+    "sellable": true
+  },
+  {
+    "id": "1754886790467",
+    "name": "Purple Grapes",
+    "desc": "Deliciosas.",
+    "price": 8,
+    "category": "food",
+    "sprite": {
+      "row": 0,
+      "col": 6
+    },
+    "tilesetUrl": "/items/tileset_1.png",
+    "sellable": true
+  },
+  {
+    "id": "1754886805715",
+    "name": "Melacia",
+    "desc": "Yummy!",
+    "price": 11,
+    "category": "food",
+    "sprite": {
+      "row": 0,
+      "col": 7
+    },
+    "tilesetUrl": "/items/tileset_1.png",
+    "sellable": true
+  },
+  {
+    "id": "1754886818843",
+    "name": "Stawberry",
+    "desc": "Dá um bom milkshake! Cuidado pra não comprar o errado!",
+    "price": 30,
+    "category": "food",
+    "sprite": {
+      "row": 0,
+      "col": 8
+    },
+    "tilesetUrl": "/items/tileset_1.png",
+    "sellable": true
+  },
+  {
+    "id": "1754887474680",
+    "name": "Avocado",
+    "desc": "Uma fruta.",
+    "price": 25,
+    "category": "food",
+    "sprite": {
+      "row": 0,
+      "col": 9
+    },
+    "tilesetUrl": "/items/tileset_1.png",
+    "sellable": true
+  },
+  {
+    "id": "1754887484840",
+    "name": "Lemon",
+    "desc": "Uma fruta.",
+    "price": 25,
+    "category": "food",
+    "sprite": {
+      "row": 0,
+      "col": 10
+    },
+    "tilesetUrl": "/items/tileset_1.png",
+    "sellable": true
+  },
+  {
+    "id": "1754887524880",
+    "name": "Carrot",
+    "desc": "Nutritivo velhinho",
+    "price": 8,
+    "category": "food",
+    "sprite": {
+      "row": 1,
+      "col": 1
     },
     "tilesetUrl": "/items/tileset_1.png",
     "sellable": true

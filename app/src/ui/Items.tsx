@@ -23,6 +23,7 @@ export function Items() {
   const [draft, setDraft] = useState<DraftItem>(() => ({
     id: 'item_1', name: 'New Item', price: 10, category: 'food', sprite: { row: 0, col: 0 }, tilesetUrl: '', sellable: true
   }))
+  const [editingId, setEditingId] = useState<string | null>(null)
 
   const selectedTileset = useMemo(() => selectedTilesetIdx==null ? null : tilesets[selectedTilesetIdx] || null, [tilesets, selectedTilesetIdx])
   const isLoaded = (state as any).itemsLoaded ?? true
@@ -72,6 +73,81 @@ export function Items() {
     if (item.sellable) state.shop.push(item)
     state.logs.events.unshift(`Item created: ${item.name}${item.sellable ? ' (sellable)' : ''}`)
     emit()
+  }
+
+  function updateItem() {
+    if (!editingId) return
+    const idx = state.itemsCatalog.findIndex(it => it.id === editingId)
+    if (idx === -1) return
+    const updated: ShopItem = {
+      id: draft.id,
+      name: draft.name,
+      desc: draft.desc,
+      price: draft.price,
+      category: draft.category,
+      sprite: draft.sprite,
+      tilesetUrl: draft.tilesetUrl,
+      sellable: draft.sellable,
+      apply: state.itemsCatalog[idx].apply || (() => {}),
+    }
+    state.itemsCatalog[idx] = updated
+    // Keep shop in sync
+    state.shop = state.itemsCatalog.filter(i => (i as any).sellable)
+    state.logs.events.unshift(`Item updated: ${updated.name}`)
+    setEditingId(null)
+    emit()
+  }
+
+  function startEditing(it: ShopItem) {
+    setDraft({
+      id: it.id,
+      name: it.name,
+      desc: it.desc,
+      price: it.price,
+      category: it.category,
+      sprite: it.sprite,
+      tilesetUrl: it.tilesetUrl || '',
+      sellable: !!(it as any).sellable,
+    })
+    setEditingId(it.id)
+    setSelectedSpriteIdx(null)
+    // Try to auto-load tileset JSON that matches this item's tilesetUrl (replace .png -> .json)
+    if (it.tilesetUrl) {
+      const jsonUrl = it.tilesetUrl.replace(/\.png$/i, '.json')
+      // Skip if already loaded for this imagePath
+      const existingIdx = tilesets.findIndex(t => t.imagePath === it.tilesetUrl)
+      if (existingIdx >= 0) {
+        setSelectedTilesetIdx(existingIdx)
+        // Also attempt to select the exact sprite by row/col
+        const sIdx = tilesets[existingIdx]?.sprites.findIndex(s => s.row === it.sprite.row && s.col === it.sprite.col) ?? -1
+        if (sIdx >= 0) setSelectedSpriteIdx(sIdx)
+      } else {
+        // Fetch and add tileset
+        ;(async () => {
+          try {
+            const res = await fetch(jsonUrl, { cache: 'no-cache' })
+            if (!res.ok) return
+            const ts = (await res.json()) as TilesetJSON
+            // Only add if imagePath matches the item's tilesetUrl
+            if (ts.imagePath && ts.imagePath !== it.tilesetUrl) {
+              // Fallback: set imagePath to item's tilesetUrl so preview works
+              (ts as any).imagePath = it.tilesetUrl
+            }
+            setTilesets(prev => {
+              const next = [...prev, ts]
+              // Select just-added tileset and its sprite
+              const newIdx = next.length - 1
+              setSelectedTilesetIdx(newIdx)
+              const spriteIdx = ts.sprites.findIndex(s => s.row === it.sprite.row && s.col === it.sprite.col)
+              if (spriteIdx >= 0) setSelectedSpriteIdx(spriteIdx)
+              return next
+            })
+          } catch {
+            // ignore on failure
+          }
+        })()
+      }
+    }
   }
 
   function exportItems() {
@@ -228,12 +304,20 @@ export function Items() {
             </div>
 
             <div className="d-flex gap-2 mt-3">
-              <button className="btn btn-success" onClick={addToGame}>Add to game</button>
+              {!editingId && (
+                <button className="btn btn-success" onClick={addToGame}>Add to game</button>
+              )}
+              {editingId && (
+                <>
+                  <button className="btn btn-primary" onClick={updateItem}>Save changes</button>
+                  <button className="btn btn-outline-secondary" onClick={() => { setEditingId(null); setDraft(d => ({ ...d, id: 'item_' + Date.now(), name: 'New Item' })) }}>Cancel</button>
+                </>
+              )}
             </div>
 
             <div className="mt-4">
               <div className="fw-semibold mb-2">Items Catalog</div>
-              <ItemsList />
+              <ItemsList onEdit={startEditing} />
             </div>
           </div>
         </div>
@@ -242,7 +326,7 @@ export function Items() {
   )
 }
 
-function ItemsList() {
+function ItemsList({ onEdit }: { onEdit: (it: ShopItem) => void }) {
   const { state, emit } = useStore()
   const items = useMemo(() => state.itemsCatalog, [state.itemsCatalog])
 
@@ -253,7 +337,7 @@ function ItemsList() {
   return (
     <div className="d-flex flex-wrap gap-2">
       {items.map((it) => (
-        <div key={it.id} className="border rounded p-2 d-flex align-items-center gap-2" style={{ width: 260 }} title={it.desc}>
+        <div key={it.id} className="border rounded p-2 d-flex align-items-center gap-2" style={{ width: 320 }} title={it.desc}>
           <div style={{
             ...(it.tilesetUrl ? getSpriteStyleFromUrl(it.sprite, it.tilesetUrl) : getSpriteStyle(it.sprite)),
             flex: '0 0 auto',
@@ -263,6 +347,13 @@ function ItemsList() {
             <div className="small text-muted">{it.category} • {it.price}g</div>
           </div>
           {it.sellable && <span className="badge text-bg-success">Sellable</span>}
+          <button
+            className="btn btn-sm btn-outline-primary"
+            onClick={() => onEdit(it)}
+            title="Edit item"
+          >
+            Edit
+          </button>
           <button
             className="btn btn-sm btn-outline-danger"
             onClick={() => {

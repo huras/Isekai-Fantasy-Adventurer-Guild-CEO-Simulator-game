@@ -39,8 +39,11 @@ export function Guild() {
           stats: selected.stats,
           hp: selected.hp,
           hpMax: selected.hpMax,
+          mp: selected.mp,
+          mpMax: selected.mpMax,
           speed: selected.speed,
           skills: selected.skills,
+          items: selected.items,
         }} />
       )}
     </div>
