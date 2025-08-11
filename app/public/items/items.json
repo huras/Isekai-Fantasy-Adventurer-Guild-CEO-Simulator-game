@@ -248,5 +248,18 @@
     },
     "tilesetUrl": "/items/tileset_1.png",
     "sellable": true
+  },
+  {
+    "id": "1754938421501",
+    "name": "Fire Sword",
+    "desc": "Uma fruta.",
+    "price": 1000,
+    "category": "skill",
+    "sprite": {
+      "row": 25,
+      "col": 9
+    },
+    "tilesetUrl": "/items/tileset_1.png",
+    "sellable": true
   }
 ]

@@ -14,6 +14,7 @@ import { Expired } from './Expired'
 import { Tilesets } from './Tilesets'
 import { Items } from './Items'
 import { GuildInventory } from './GuildInventory'
+import { NextDayFAB } from './NextDayFAB'
 import { BattleAdmin } from './BattleAdmin'
 
 function MainTabs() {
@@ -42,6 +43,7 @@ export function App({ initialState }: { initialState?: Partial<import('../core/t
     <StoreProvider initial={initialState}>
       <Header />
       <MainTabs />
+      <NextDayFAB />
     </StoreProvider>
   )
 }

@@ -1,0 +1,65 @@
+[
+  {
+    "id": "food",
+    "name": "Food",
+    "emoji": "🍖",
+    "description": "Consumable items that restore health and provide breakfast",
+    "sortOrder": 1
+  },
+  {
+    "id": "potion",
+    "name": "Potions",
+    "emoji": "🧪",
+    "description": "Magical consumables that restore health and mana",
+    "sortOrder": 2
+  },
+  {
+    "id": "weapon",
+    "name": "Weapons",
+    "emoji": "⚔️",
+    "description": "Combat equipment that increases attack power",
+    "sortOrder": 3
+  },
+  {
+    "id": "armor",
+    "name": "Armor",
+    "emoji": "🛡️",
+    "description": "Protective equipment that increases defense",
+    "sortOrder": 4
+  },
+  {
+    "id": "accessory",
+    "name": "Accessories",
+    "emoji": "💍",
+    "description": "Special items that provide various bonuses",
+    "sortOrder": 5
+  },
+  {
+    "id": "skill",
+    "name": "Skill Items",
+    "emoji": "📜",
+    "description": "Items that teach or enhance abilities",
+    "sortOrder": 6
+  },
+  {
+    "id": "material",
+    "name": "Materials",
+    "emoji": "💎",
+    "description": "Crafting components and valuable resources",
+    "sortOrder": 7
+  },
+  {
+    "id": "tool",
+    "name": "Tools",
+    "emoji": "🔧",
+    "description": "Utility items for various tasks",
+    "sortOrder": 8
+  },
+  {
+    "id": "misc",
+    "name": "Miscellaneous",
+    "emoji": "📦",
+    "description": "Various other items",
+    "sortOrder": 9
+  }
+]

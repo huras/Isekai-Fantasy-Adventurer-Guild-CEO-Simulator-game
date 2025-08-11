@@ -1,7 +1,8 @@
-import React, { useMemo, useState } from 'react'
-import type { ItemCategory, ShopItem } from '../core/types'
+import React, { useMemo, useState, useEffect } from 'react'
+import type { ItemCategoryId, ShopItem } from '../core/types'
 import { useStore } from '../core/store'
 import { getSpriteStyle, getSpriteStyleFromUrl } from '../core/items'
+import { getCategoryEmoji, getCategoryName, getCategories, loadItemCategories } from '../core/categories'
 
 type SortKey = 'name_asc' | 'name_desc' | 'price_asc' | 'price_desc' | 'category'
 
@@ -10,11 +11,29 @@ export function GuildInventory() {
   const [q, setQ] = useState('')
   const [sort, setSort] = useState<SortKey>('name_asc')
   const [groupStacks, setGroupStacks] = useState(true)
-  const [catFilter, setCatFilter] = useState<Record<ItemCategory, boolean>>({ food: true, potion: true, weapon: true })
+  const [categoriesLoaded, setCategoriesLoaded] = useState(false)
+  const [catFilter, setCatFilter] = useState<Record<string, boolean>>({})
+
+  // Load categories when component mounts
+  useEffect(() => {
+    async function loadCategories() {
+      await loadItemCategories()
+      const categories = getCategories()
+      const initial: Record<string, boolean> = {}
+      categories.forEach(cat => {
+        initial[cat.id] = true
+      })
+      setCatFilter(initial)
+      setCategoriesLoaded(true)
+    }
+    loadCategories()
+  }, [])
 
   const items = state.inventory || []
 
   const filtered = useMemo(() => {
+    if (!categoriesLoaded) return []
+    
     const text = q.trim().toLowerCase()
     const raw = items.filter(it => catFilter[it.category])
       .filter(it => !text || it.name.toLowerCase().includes(text) || (it.desc || '').toLowerCase().includes(text))
@@ -26,7 +45,7 @@ export function GuildInventory() {
       else bucket.qty += 1
     }
     return Array.from(map.values()).map(v => ({ ...v.item, price: v.item.price, _qty: v.qty } as ShopItem & { _qty: number }))
-  }, [items, q, catFilter, groupStacks])
+  }, [items, q, catFilter, groupStacks, categoriesLoaded])
 
   const sorted = useMemo(() => {
     const arr = [...filtered]
@@ -44,13 +63,28 @@ export function GuildInventory() {
 
   const totalCount = items.length
 
-  const categoryEmoji: Record<ItemCategory, string> = { food: '🍎', potion: '🧪', weapon: '⚔️' }
+  const availableCategories = getCategories().slice(0, 6) // Show first 6 categories in filter
+
+  if (!categoriesLoaded) {
+    return (
+      <div className="card">
+        <div className="card-body">
+          <div className="text-center text-muted py-4">
+            <div className="spinner-border spinner-border-sm me-2" role="status">
+              <span className="visually-hidden">Loading...</span>
+            </div>
+            Loading categories...
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="card">
       <div className="card-body">
         <div className="d-flex justify-content-between align-items-center mb-3">
-          <h5 className="card-title mb-0">Guild Inventory</h5>
+          <h5 className="card-title mb-0">📦 Guild Inventory</h5>
           <span className="badge text-bg-secondary">Items: {totalCount}</span>
         </div>
         <div className="row g-2 align-items-end mb-3">
@@ -74,13 +108,20 @@ export function GuildInventory() {
               <label htmlFor="groupStacks" className="form-check-label">Group identical items</label>
             </div>
           </div>
-          <div className="col-12 col-md-2">
+          <div className="col-12 col-md-12 mb-3">
             <div className="d-flex gap-3 mt-4">
-              {(['food','potion','weapon'] as ItemCategory[]).map(c => (
-                <div key={c} className="form-check d-flex align-items-center gap-1" title={c}>
-                  <input id={`cat_${c}`} className="form-check-input" type="checkbox" checked={!!catFilter[c]} onChange={e => setCatFilter(prev => ({ ...prev, [c]: e.target.checked }))} aria-label={c} />
-                  <label htmlFor={`cat_${c}`} className="form-check-label" aria-hidden="true">
-                    <span style={{ fontSize: 18 }} role="img">{categoryEmoji[c]}</span>
+              {availableCategories.map(category => (
+                <div key={category.id} className="form-check d-flex align-items-center gap-1" title={category.name}>
+                  <input 
+                    id={`cat_${category.id}`} 
+                    className="form-check-input" 
+                    type="checkbox" 
+                    checked={!!catFilter[category.id]} 
+                    onChange={e => setCatFilter(prev => ({ ...prev, [category.id]: e.target.checked }))} 
+                    aria-label={category.name} 
+                  />
+                  <label htmlFor={`cat_${category.id}`} className="form-check-label" aria-hidden="true">
+                    <span style={{ fontSize: 18 }} role="img">{category.emoji}</span>
                   </label>
                 </div>
               ))}
@@ -89,7 +130,21 @@ export function GuildInventory() {
         </div>
 
         {sorted.length === 0 ? (
-          <div className="text-muted">No items match.</div>
+          <div className="text-center text-muted py-4">
+            {items.length === 0 ? (
+              <div>
+                <div className="fs-1 mb-2">📦</div>
+                <div>No items in guild inventory.</div>
+                <div className="small">Visit the Shop to purchase items!</div>
+              </div>
+            ) : (
+              <div>
+                <div className="fs-1 mb-2">🔍</div>
+                <div>No items match your search/filter criteria.</div>
+                <div className="small">Try adjusting your search or category filters.</div>
+              </div>
+            )}
+          </div>
         ) : (
           <div className="d-flex flex-wrap gap-2">
             {sorted.map((it: any) => (
@@ -97,7 +152,7 @@ export function GuildInventory() {
                 <div style={{ ...(it.tilesetUrl ? getSpriteStyleFromUrl(it.sprite, it.tilesetUrl) : getSpriteStyle(it.sprite)) }} />
                 <div className="flex-grow-1">
                   <div className="fw-semibold text-truncate">{it.name}</div>
-                  <div className="small text-muted text-truncate">{it.category} • {it.price}g</div>
+                  <div className="small text-muted text-truncate">{getCategoryEmoji(it.category)} {getCategoryName(it.category)} • {it.price}g</div>
                 </div>
                 {groupStacks && typeof it._qty === 'number' && it._qty > 1 && (
                   <span className="badge text-bg-secondary" title="Stack quantity">×{it._qty}</span>

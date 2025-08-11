@@ -158,48 +158,18 @@ export function Guild() {
                       )}
                     </div>
 
-                    {/* Stats Grid */}
-                    <div className="row g-2 mb-3">
-                      <div className="col-6">
-                        <div className="text-center p-2 bg-light rounded-3">
-                          <div className="small text-muted">⚡ Speed</div>
-                          <div className="fw-bold text-primary">{m.speed}</div>
-                        </div>
+                    {/* Compact Combat Stats */}
+                    <div className="mb-2">
+                      <div className="d-flex flex-wrap gap-2">
+                        <div className="px-2 py-1 border rounded-3 bg-light small" title="Strength">💪 STR {m.stats?.str ?? 0}</div>
+                        <div className="px-2 py-1 border rounded-3 bg-light small" title="Magic">🔮 MAG {m.stats?.mag ?? 0}</div>
+                        <div className="px-2 py-1 border rounded-3 bg-light small" title="Skill">🎯 SKL {m.stats?.skill ?? 0}</div>
+                        <div className="px-2 py-1 border rounded-3 bg-light small" title="Speed">🏃 SPD {m.stats?.speed ?? 0}</div>
+                        <div className="px-2 py-1 border rounded-3 bg-light small" title="Luck">🍀 LCK {m.stats?.luck ?? 0}</div>
+                        <div className="px-2 py-1 border rounded-3 bg-light small" title="Defense">🛡️ DEF {m.stats?.defense ?? 0}</div>
+                        <div className="px-2 py-1 border rounded-3 bg-light small" title="Resistance">✨ RES {m.stats?.resistance ?? 0}</div>
                       </div>
-                      <div className="col-6">
-                        <div className="text-center p-2 bg-light rounded-3">
-                          <div className="small text-muted">💰 Upkeep</div>
-                          <div className="fw-bold text-secondary">{m.upkeep}g/day</div>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Main Stats */}
-                    <div className="row g-1 mb-3">
-                      <div className="col-3">
-                        <div className="text-center p-1">
-                          <div className="small text-muted">💪</div>
-                          <div className="fw-bold text-success">{m.stats?.str || 0}</div>
-                        </div>
-                      </div>
-                      <div className="col-3">
-                        <div className="text-center p-1">
-                          <div className="small text-muted">🧠</div>
-                          <div className="fw-bold text-info">{m.stats?.int || 0}</div>
-                        </div>
-                      </div>
-                      <div className="col-3">
-                        <div className="text-center p-1">
-                          <div className="small text-muted">🏃</div>
-                          <div className="fw-bold text-warning">{m.stats?.agi || 0}</div>
-                        </div>
-                      </div>
-                      <div className="col-3">
-                        <div className="text-center p-1">
-                          <div className="small text-muted">✨</div>
-                          <div className="fw-bold" style={{ color: '#6f42c1' }}>{m.stats?.spr || 0}</div>
-                        </div>
-                      </div>
+                      <div className="small text-muted mt-1">💰 Upkeep {m.upkeep}g/day</div>
                     </div>
 
                     {/* Footer */}
@@ -243,5 +213,7 @@ export function Guild() {
     </div>
   )
 }
+
+
 
 

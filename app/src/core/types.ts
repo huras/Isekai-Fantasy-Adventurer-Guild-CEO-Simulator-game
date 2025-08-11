@@ -1,4 +1,13 @@
-export type Stats = { str: number; int: number; agi: number; spr: number; hp?: number; speed?: number };
+export type Stats = { 
+  str: number;    // Affects damage the unit deals with physical attacks
+  mag: number;    // Affects damage the unit deals with magical attacks  
+  skill: number;  // Affects hit rate and the frequency of critical hits
+  speed: number;  // Affects traveling times
+  luck: number;   // Has various effects (each skill or status effect may use for calculations)
+  defense: number; // Reduces damage from physical attacks
+  resistance: number; // Reduces damage from magical attacks
+  hp?: number; 
+};
 
 export type ExperienceCurve = 'fast' | 'normal' | 'slow' | 'erratic'
 
@@ -119,14 +128,14 @@ export type ExpiredCandidate = {
   personality?: string;
 };
 
-export type ItemCategory = 'food' | 'potion' | 'weapon' | 'armor' | 'accessory' | 'skill'
+export type ItemCategoryId = 'food' | 'potion' | 'weapon' | 'armor' | 'accessory' | 'skill' | 'material' | 'tool' | 'misc'
 
 export type ShopItem = {
   id: string;
   name: string;
   desc?: string;
   price: number;
-  category: ItemCategory;
+  category: ItemCategoryId;
   sprite: { row: number; col: number };
   // Optional: items crafted from custom tilesets can carry their image URL
   tilesetUrl?: string;

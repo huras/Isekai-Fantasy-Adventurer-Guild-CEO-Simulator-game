@@ -4,12 +4,13 @@ import { generateCandidates } from './recruitment'
 import { advanceMissionsOneDay, autoAssign, generateQuestList, createBattleFromMission } from './quests'
 import { dailyUpkeep, spendMoney } from './money'
 import { addExperience, getExperienceProgress, getExperienceForNextLevel, getExperienceCurveEmoji, getExperienceCurveDescription } from './leveling'
+import { loadItemCategories } from './categories'
 // import { generateInitialShop } from './items'
 
 const initialState: GameState = {
   day: 1,
   week: 1,
-  money: 1000000,
+  money: 6000000,
   notoriety: 0,
   members: [],
   candidates: [],
@@ -78,7 +79,7 @@ export function StoreProvider({ children, initial }: { children: React.ReactNode
       const player: Member = {
         id: 'player', isPlayer: true, name: 'You', class: 'Guildmaster', personality: 'heroic', gender: 'male',
         appearance: '♂️ Summoned human with dark hair and determined eyes; beauty 7/10',
-        upkeep: 0, stats: { str: 6, int: 6, agi: 6, spr: 6 }, hpMax: 40, hp: 40, speed: 3, skills: ['Leadership', 'Tactics'],
+        upkeep: 0, stats: { str: 6, mag: 6, skill: 6, speed: 3, luck: 6, defense: 4, resistance: 4 }, hpMax: 40, hp: 40, speed: 3, skills: ['Leadership', 'Tactics'],
         level: 1, experience: 0, experienceCurve: 'normal',
         // Ensure Guildmaster starts with specific items (Short Sword + two fruits) using stubs until catalog loads.
         items: [
@@ -104,6 +105,9 @@ export function StoreProvider({ children, initial }: { children: React.ReactNode
     // Load catalog from /items/items.json; if missing, create default minimal file in memory
     async function loadCatalog() {
       try {
+        // Load categories first
+        await loadItemCategories()
+        
         const base = (import.meta as any).env?.BASE_URL || '/'
         const url = new URL(`${base}${base.endsWith('/') ? '' : '/'}items/items.json`, window.location.href)
         console.log('[ItemsLoader] base:', base, 'location:', window.location.href, 'hash:', window.location.hash, 'computedUrl:', url.href)
@@ -173,7 +177,7 @@ export function StoreProvider({ children, initial }: { children: React.ReactNode
       if (idx === -1) return
       const c = state.candidates.splice(idx, 1)[0]
       const hpMax = c.stats.hp ?? 20
-      const mpMax = 10 + Math.floor((c.stats.spr ?? 3) / 2)
+      const mpMax = 10 + Math.floor((c.stats.mag ?? 3) / 2)
       const recruitBonus = state.modifiers.recruitStatBonus || 0
       
       // Randomly assign experience curve
@@ -191,15 +195,18 @@ export function StoreProvider({ children, initial }: { children: React.ReactNode
         upkeep: c.upkeep,
         stats: {
           str: c.stats.str + recruitBonus,
-          int: c.stats.int + recruitBonus,
-          agi: c.stats.agi + recruitBonus,
-          spr: c.stats.spr + recruitBonus,
+          mag: c.stats.mag + recruitBonus,
+          skill: c.stats.skill + recruitBonus,
+          speed: c.stats.speed + recruitBonus,
+          luck: c.stats.luck + recruitBonus,
+          defense: c.stats.defense + recruitBonus,
+          resistance: c.stats.resistance + recruitBonus,
         },
         hpMax,
         hp: hpMax,
         mpMax,
         mp: mpMax,
-        speed: Math.max(1, Math.floor(((c.stats.agi ?? 3) + recruitBonus) / 3)),
+        speed: Math.max(1, Math.floor(((c.stats.skill ?? 3) + recruitBonus) / 3)),
         skills: c.skills || [],
         level: 1,
         experience: 0,

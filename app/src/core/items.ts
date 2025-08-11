@@ -1,4 +1,4 @@
-import type { GameState, ShopItem } from './types'
+import type { GameState, ShopItem, ItemCategoryId } from './types'
 import type React from 'react'
 
 export const TILE_SIZE = 32
@@ -59,7 +59,7 @@ function createItem(params: {
   id: string
   name: string
   price: number
-  category: 'food' | 'potion' | 'weapon' | 'armor' | 'accessory' | 'skill'
+  category: ItemCategoryId
   sprite: SpriteCoord
   desc?: string
 }): ShopItem {

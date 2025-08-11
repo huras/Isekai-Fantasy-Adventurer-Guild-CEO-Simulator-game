@@ -76,7 +76,7 @@ function increaseStatsOnLevelUp(member: Member): void {
   const statIncrease = Math.floor(Math.random() * 2) + 1 // 1-2 points
   
   // Randomly choose which stats to increase
-  const statKeys: (keyof Stats)[] = ['str', 'int', 'agi', 'spr']
+  const statKeys: (keyof Stats)[] = ['str', 'mag', 'skill', 'speed', 'luck', 'defense', 'resistance']
   const statsToIncrease = Math.floor(Math.random() * 2) + 1 // 1-2 stats
   
   for (let i = 0; i < statsToIncrease; i++) {
@@ -152,9 +152,12 @@ export function calculatePowerLevel(member: Member): number {
   const stats = member.stats
   if (!stats) return member.level
   
-  const values = [stats.str, stats.int, stats.agi, stats.spr].sort((a, b) => b - a)
-  const topTwo = (values[0] || 0) + (values[1] || 0)
-  const basePower = topTwo + Math.floor(member.speed || 1)
+  // Calculate power based on new stat system
+  const attackPower = Math.max(stats.str, stats.mag) // Use higher of physical or magical attack
+  const defensePower = Math.min(stats.defense, stats.resistance) // Use lower of physical or magical defense
+  const utilityPower = stats.skill + stats.luck // Skill and luck contribute to overall effectiveness
+  
+  const basePower = attackPower + defensePower + Math.floor(utilityPower / 2)
   
   // Level bonus: each level adds some power
   const levelBonus = Math.floor(member.level * 0.5)

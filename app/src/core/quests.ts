@@ -5,10 +5,14 @@ import { addExperience } from './leveling'
 function uid(prefix = 'quest') { return `${prefix}_${Math.random().toString(36).slice(2, 9)}` }
 
 export function calculateMemberPower(member: Member): number {
-  const stats = member.stats || { str: 5, int: 5, agi: 5, spr: 5 }
-  const values = [stats.str, stats.int, stats.agi, stats.spr].sort((a, b) => b - a)
-  const topTwo = (values[0] || 0) + (values[1] || 0)
-  return topTwo + Math.floor(member.speed || 1)
+  const stats = member.stats || { str: 5, mag: 5, skill: 5, speed: 3, luck: 5, defense: 3, resistance: 3 }
+  
+  // Calculate power based on new stat system
+  const attackPower = Math.max(stats.str, stats.mag) // Use higher of physical or magical attack
+  const defensePower = Math.min(stats.defense, stats.resistance) // Use lower of physical or magical defense
+  const utilityPower = stats.skill + stats.luck // Skill and luck contribute to overall effectiveness
+  
+  return attackPower + defensePower + Math.floor(utilityPower / 2) + Math.floor(member.speed || 1)
 }
 
 function isMemberBusy(state: GameState, memberId: string, excludeQuestId?: string): string | null {
