@@ -277,6 +277,9 @@ export function Items() {
                   <option value="food">food</option>
                   <option value="potion">potion</option>
                   <option value="weapon">weapon</option>
+                  <option value="armor">armor</option>
+                  <option value="accessory">accessory</option>
+                  <option value="skill">skill</option>
                 </select>
               </div>
               <div className="col-6">

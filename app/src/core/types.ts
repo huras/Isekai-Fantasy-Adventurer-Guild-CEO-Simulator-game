@@ -1,5 +1,7 @@
 export type Stats = { str: number; int: number; agi: number; spr: number; hp?: number; speed?: number };
 
+export type ExperienceCurve = 'fast' | 'normal' | 'slow' | 'erratic'
+
 export type DifficultyRank = 'H' | 'G' | 'F' | 'E' | 'D' | 'C' | 'B' | 'A' | 'S'
 export type JobKind = 'Find' | 'Deliver' | 'Escort' | 'Protect' | 'Kill'
 export type TargetKind = 'Person' | 'Monster' | 'Item' | 'Location'
@@ -49,6 +51,9 @@ export type Member = {
   items?: InventoryItem[]; // max 12, references to catalog items
   fedOnDay?: number; // breakfast day marker
   // Progression
+  level: number;
+  experience: number;
+  experienceCurve: ExperienceCurve;
   baseLevel?: number;
   baseExp?: number;
   classLevel?: number;
@@ -114,7 +119,7 @@ export type ExpiredCandidate = {
   personality?: string;
 };
 
-export type ItemCategory = 'food' | 'potion' | 'weapon'
+export type ItemCategory = 'food' | 'potion' | 'weapon' | 'armor' | 'accessory' | 'skill'
 
 export type ShopItem = {
   id: string;

@@ -1,14 +1,15 @@
 import React, { createContext, useContext, useEffect, useMemo, useReducer } from 'react'
-import type { BattleActor, BattleState, GameState, Member, ShopItem, InventoryItem } from './types'
+import type { BattleActor, BattleState, GameState, Member, ShopItem, InventoryItem, ExperienceCurve } from './types'
 import { generateCandidates } from './recruitment'
 import { advanceMissionsOneDay, autoAssign, generateQuestList, createBattleFromMission } from './quests'
 import { dailyUpkeep, spendMoney } from './money'
+import { addExperience, getExperienceProgress, getExperienceForNextLevel, getExperienceCurveEmoji, getExperienceCurveDescription } from './leveling'
 // import { generateInitialShop } from './items'
 
 const initialState: GameState = {
   day: 1,
   week: 1,
-  money: 100,
+  money: 1000000,
   notoriety: 0,
   members: [],
   candidates: [],
@@ -78,6 +79,7 @@ export function StoreProvider({ children, initial }: { children: React.ReactNode
         id: 'player', isPlayer: true, name: 'You', class: 'Guildmaster', personality: 'heroic', gender: 'male',
         appearance: '♂️ Summoned human with dark hair and determined eyes; beauty 7/10',
         upkeep: 0, stats: { str: 6, int: 6, agi: 6, spr: 6 }, hpMax: 40, hp: 40, speed: 3, skills: ['Leadership', 'Tactics'],
+        level: 1, experience: 0, experienceCurve: 'normal',
         // Ensure Guildmaster starts with specific items (Short Sword + two fruits) using stubs until catalog loads.
         items: [
           { id: '1754878147635' },
@@ -173,6 +175,11 @@ export function StoreProvider({ children, initial }: { children: React.ReactNode
       const hpMax = c.stats.hp ?? 20
       const mpMax = 10 + Math.floor((c.stats.spr ?? 3) / 2)
       const recruitBonus = state.modifiers.recruitStatBonus || 0
+      
+      // Randomly assign experience curve
+      const experienceCurves: ExperienceCurve[] = ['fast', 'normal', 'slow', 'erratic']
+      const randomCurve = experienceCurves[Math.floor(Math.random() * experienceCurves.length)]
+      
       const member: Member = {
         id: `mem_${Math.random().toString(36).slice(2, 9)}`,
         name: c.name,
@@ -194,6 +201,9 @@ export function StoreProvider({ children, initial }: { children: React.ReactNode
         mp: mpMax,
         speed: Math.max(1, Math.floor(((c.stats.agi ?? 3) + recruitBonus) / 3)),
         skills: c.skills || [],
+        level: 1,
+        experience: 0,
+        experienceCurve: randomCurve,
         baseLevel: 1,
         baseExp: 0,
         classLevel: 1,
@@ -357,25 +367,51 @@ export function StoreProvider({ children, initial }: { children: React.ReactNode
       const b = state.battle
       if (!b || state.isGameOver) return
       if (b.turnSide !== 'enemy') return
-      const actor = b.enemies[b.turnIndex % b.enemies.length]
-      if (!actor || actor.hp <= 0) { b.turnIndex = (b.turnIndex + 1) % b.enemies.length; return this.battleEnemyTurn() }
-      // Target first alive ally
-      const targetIdx = b.allies.findIndex(a => a.hp > 0)
-      if (targetIdx < 0) return
-      const target = b.allies[targetIdx]
-      const dmg = Math.max(1, Math.floor((actor.power ?? 7) * (0.8 + Math.random() * 0.6)))
-      target.hp = Math.max(0, target.hp - dmg)
-      b.log.unshift(`${actor.name} hits ${target.name} for ${dmg}`)
-      if (b.allies.every(a => a.hp <= 0)) {
-        b.log.unshift('Your party has been defeated...')
-        state.isGameOver = true
-        state.logs.events.unshift('💀 Battle lost. Game Over.')
-        dispatch({ type: 'emit' })
-        return
+
+      // Process the entire enemy phase in one call to avoid softlocks
+      const maxIterations = Math.max(1, b.enemies.length * 2) // safety against unexpected states
+      let performed = 0
+      while (b.turnSide === 'enemy' && performed < maxIterations) {
+        const actor = b.enemies[b.turnIndex % Math.max(1, b.enemies.length)]
+        if (!actor || actor.hp <= 0) {
+          // Skip dead or invalid actor
+          b.turnIndex += 1
+          if (b.turnIndex >= b.enemies.length) {
+            b.turnSide = 'ally'
+            b.turnIndex = 0
+          }
+          performed += 1
+          continue
+        }
+        // Target first alive ally
+        const targetIdx = b.allies.findIndex(a => a.hp > 0)
+        if (targetIdx < 0) {
+          // All allies down (should have been caught already), end battle
+          b.log.unshift('Your party has been defeated...')
+          state.isGameOver = true
+          state.logs.events.unshift('💀 Battle lost. Game Over.')
+          dispatch({ type: 'emit' })
+          return
+        }
+        const target = b.allies[targetIdx]
+        const dmg = Math.max(1, Math.floor((actor.power ?? 7) * (0.8 + Math.random() * 0.6)))
+        target.hp = Math.max(0, target.hp - dmg)
+        b.log.unshift(`${actor.name} hits ${target.name} for ${dmg}`)
+        if (b.allies.every(a => a.hp <= 0)) {
+          b.log.unshift('Your party has been defeated...')
+          state.isGameOver = true
+          state.logs.events.unshift('💀 Battle lost. Game Over.')
+          dispatch({ type: 'emit' })
+          return
+        }
+        // Next enemy or switch back to allies when the round ends
+        b.turnIndex += 1
+        if (b.turnIndex >= b.enemies.length) {
+          b.turnSide = 'ally'
+          b.turnIndex = 0
+        }
+        performed += 1
       }
-      // Next enemy or allies turn
-      b.turnIndex += 1
-      if (b.turnIndex >= b.enemies.length) { b.turnSide = 'ally'; b.turnIndex = 0 }
       dispatch({ type: 'emit' })
     },
     battleContinue(): void {

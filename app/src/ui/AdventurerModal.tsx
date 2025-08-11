@@ -3,6 +3,7 @@ import { getSpriteStyleFromUrl } from '../core/items'
 import { ProgressBar } from './ProgressBar'
 import type { InventoryItem, ShopItem, Stats } from '../core/types'
 import { useStore } from '../core/store'
+import { getExperienceProgress, getExperienceForNextLevel, getExperienceCurveEmoji, getExperienceCurveDescription, calculatePowerLevel } from '../core/leveling'
 
 type AdventurerLike = {
   id: string
@@ -21,6 +22,9 @@ type AdventurerLike = {
   items?: ShopItem[]
   weekAppeared?: number
   expiresOnWeek?: number
+  level?: number
+  experience?: number
+  experienceCurve?: 'fast' | 'normal' | 'slow' | 'erratic'
 }
 
 function computePower(stats?: Stats, speed?: number): number | null {
@@ -173,6 +177,48 @@ export function AdventurerModal({ open, onClose, adventurer }: { open: boolean; 
                     </div>
                   </div>
                 )}
+
+                {/* Level and Experience Information */}
+                {(adventurer.level || adventurer.experience || adventurer.experienceCurve) && (
+                  <div className="mb-2">
+                    <div className="fw-bold mb-1">Level & Experience</div>
+                    <div className="row g-2 mb-2">
+                      <div className="col-6">
+                        <div className="small text-muted">Level</div>
+                        <div className="fw-bold text-primary">Lv.{adventurer.level || 1}</div>
+                      </div>
+                      <div className="col-6">
+                        <div className="small text-muted">Experience Curve</div>
+                        <div className="fw-bold text-secondary d-flex align-items-center gap-1">
+                          {adventurer.experienceCurve ? getExperienceCurveEmoji(adventurer.experienceCurve) : '❓'} 
+                          {adventurer.experienceCurve || 'Unknown'}
+                        </div>
+                      </div>
+                    </div>
+                    
+                    {adventurer.experience !== undefined && adventurer.experienceCurve && (
+                      <div className="mb-2">
+                        <div className="small text-muted mb-1">
+                          Experience: {adventurer.experience}/{getExperienceForNextLevel({ level: adventurer.level || 1, experience: adventurer.experience, experienceCurve: adventurer.experienceCurve } as any)}
+                        </div>
+                        <ProgressBar 
+                          variant="hp" 
+                          value={getExperienceProgress({ level: adventurer.level || 1, experience: adventurer.experience, experienceCurve: adventurer.experienceCurve } as any) * 100} 
+                          max={100} 
+                          width="100%" 
+                          height={8} 
+                        />
+                      </div>
+                    )}
+                    
+                    {adventurer.experienceCurve && (
+                      <div className="small text-muted">
+                        {getExperienceCurveDescription(adventurer.experienceCurve)}
+                      </div>
+                    )}
+                  </div>
+                )}
+
                 {Array.isArray(adventurer.skills) && adventurer.skills.length > 0 && (
                   <div className="mb-2">
                     <div className="fw-bold mb-1">Skills</div>

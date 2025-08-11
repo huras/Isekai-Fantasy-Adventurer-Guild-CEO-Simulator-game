@@ -1,0 +1,10 @@
+{
+  "name": "isekai-fantasy-adventurer-guild-ceo-simulator-game",
+  "version": "1.0.0",
+  "main": "index.js",
+  "author": "huras alexandre <hurast@gmail.com>",
+  "license": "MIT",
+  "scripts": {
+    "dev": "cd ./app && npm run dev"
+  }
+}

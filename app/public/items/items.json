@@ -235,5 +235,18 @@
     },
     "tilesetUrl": "/items/tileset_1.png",
     "sellable": true
+  },
+  {
+    "id": "1754935730336",
+    "name": "Cloth Armor",
+    "desc": "Blusa simples, só pra não ficar pelado.",
+    "price": 50,
+    "category": "armor",
+    "sprite": {
+      "row": 13,
+      "col": 0
+    },
+    "tilesetUrl": "/items/tileset_1.png",
+    "sellable": true
   }
 ]

@@ -14,7 +14,7 @@ import { Expired } from './Expired'
 import { Tilesets } from './Tilesets'
 import { Items } from './Items'
 import { GuildInventory } from './GuildInventory'
-import { NextDayFAB } from './NextDayFAB'
+import { BattleAdmin } from './BattleAdmin'
 
 function MainTabs() {
   const { state } = useStore()
@@ -30,6 +30,7 @@ function MainTabs() {
     { key: 'guild-inventory', label: 'Guild Inventory', icon: '📦', render: () => <GuildInventory /> },
     { key: 'shop', label: 'Shop', icon: '🛒', render: () => <Shop /> },
     { key: 'battle', label: inBattle ? 'Battle (Active)' : 'Battle', icon: '⚔️', highlight: inBattle, render: () => <Battle /> },
+    { key: 'battle-admin', label: 'Battle Trigger (admin)', icon: '🧪', render: () => <BattleAdmin /> },
     { key: 'events', label: 'Events', icon: '💬', render: () => <Events /> },
     { key: 'expired', label: 'Expired', icon: '⏳', render: () => <Expired /> },
   ] as const
@@ -41,7 +42,6 @@ export function App({ initialState }: { initialState?: Partial<import('../core/t
     <StoreProvider initial={initialState}>
       <Header />
       <MainTabs />
-      <NextDayFAB />
     </StoreProvider>
   )
 }

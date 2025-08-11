@@ -59,7 +59,7 @@ function createItem(params: {
   id: string
   name: string
   price: number
-  category: 'food' | 'potion' | 'weapon'
+  category: 'food' | 'potion' | 'weapon' | 'armor' | 'accessory' | 'skill'
   sprite: SpriteCoord
   desc?: string
 }): ShopItem {

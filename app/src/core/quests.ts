@@ -1,5 +1,6 @@
 import type { ActiveMission, BattleActor, BattleState, DifficultyRank, GameState, JobKind, Member, Quest, TargetKind } from './types'
 import { dailyUpkeep } from './money'
+import { addExperience } from './leveling'
 
 function uid(prefix = 'quest') { return `${prefix}_${Math.random().toString(36).slice(2, 9)}` }
 
@@ -247,8 +248,10 @@ export function advanceMissionsOneDay(state: GameState) {
   if (!state.activeMissions) return
   // If a battle is in progress, skip mission day resolution
   if (state.battle) return
-  const finished: ActiveMission[] = []
-  const survivors: ActiveMission[] = []
+  
+  const completed: ActiveMission[] = []
+  const failed: ActiveMission[] = []
+  
   for (const m of state.activeMissions) {
     // Start a battle if needed
     if ((m.battlesRemaining ?? 0) > 0) {
@@ -260,121 +263,73 @@ export function advanceMissionsOneDay(state: GameState) {
       // Only one battle at a time
       return
     }
-    // Daily attrition: damage and mana usage
-    const party = m.party
-    const dayLog: string[] = []
-    for (const member of party) {
-      if (member.alive === false) continue
-      // Job/target multipliers
-      const job = m.job || 'Find'
-      const target = m.target || 'Item'
-      const dmgMult = (
-        job === 'Kill' ? 1.5 :
-        job === 'Protect' ? 1.25 :
-        job === 'Escort' ? 1.1 :
-        job === 'Deliver' ? 0.8 :
-        0.85 // Find
-      ) * (target === 'Monster' ? 1.15 : target === 'Location' ? 1.0 : 0.95)
-      const mpMult = (
-        job === 'Find' ? 1.35 :
-        job === 'Escort' ? 1.1 :
-        job === 'Protect' ? 1.0 :
-        job === 'Deliver' ? 0.9 :
-        0.8 // Kill
-      ) * (target === 'Location' ? 1.15 : target === 'Monster' ? 0.95 : 1.0)
-
-      const dmgMax = Math.max(1, Math.floor(m.diff * 2 * dmgMult))
-      const dmg = Math.floor(Math.random() * (dmgMax + 1))
-      member.hp = Math.max(0, (member.hp ?? member.hpMax) - dmg)
-      const mpDrain = Math.floor(Math.random() * Math.max(2, Math.floor((m.diff + 2) * mpMult)))
-      member.mpMax = member.mpMax ?? 10 + Math.floor((member.stats.spr || 3) / 2)
-      member.mp = Math.max(0, (member.mp ?? member.mpMax!) - mpDrain)
-      // XP gains per day
-      member.baseLevel = member.baseLevel ?? 1
-      const baseXpGain = 5 + Math.floor(m.diff / 2)
-      const baseXpMult = job === 'Kill' ? 1.3 : job === 'Protect' ? 1.15 : job === 'Escort' ? 1.1 : 1.0
-      member.baseExp = (member.baseExp ?? 0) + Math.floor(baseXpGain * baseXpMult)
-      while ((member.baseExp ?? 0) >= 20 + (member.baseLevel - 1) * 10) {
-        member.baseExp = (member.baseExp ?? 0) - (20 + (member.baseLevel - 1) * 10)
-        member.baseLevel += 1
-        // Small stat gains on base level up
-        member.stats.str += Math.random() < 0.5 ? 1 : 0
-        member.stats.int += Math.random() < 0.5 ? 1 : 0
-        member.stats.agi += Math.random() < 0.5 ? 1 : 0
-        member.stats.spr += Math.random() < 0.5 ? 1 : 0
-        member.hpMax += 1
-      }
-      member.classLevel = member.classLevel ?? 1
-      const classBase = 4 + (m.type === 'Magic' ? 2 : 0) + (job === 'Kill' ? 1 : 0)
-      member.classExp = (member.classExp ?? 0) + classBase
-      while ((member.classExp ?? 0) >= 25 + (member.classLevel - 1) * 12) {
-        member.classExp = (member.classExp ?? 0) - (25 + (member.classLevel - 1) * 12)
-        member.classLevel += 1
-      }
-      // Skill exp for equipped skills
-      member.skillLevels = member.skillLevels || {}
-      member.skillExp = member.skillExp || {}
-      for (const skill of member.skills || []) {
-        member.skillLevels[skill] = member.skillLevels[skill] || 1
-        const skillGain = 3 + Math.floor(m.diff / 3)
-        const skillMult = job === 'Find' ? 1.2 : job === 'Escort' ? 1.1 : job === 'Kill' ? 1.15 : 1.0
-        member.skillExp[skill] = (member.skillExp[skill] || 0) + Math.floor(skillGain * skillMult)
-        while ((member.skillExp[skill] || 0) >= 15 + (member.skillLevels[skill] - 1) * 8) {
-          member.skillExp[skill] = (member.skillExp[skill] || 0) - (15 + (member.skillLevels[skill] - 1) * 8)
-          member.skillLevels[skill] += 1
-        }
-      }
-      if ((member.hp ?? 0) <= 0) {
-        member.alive = false
-        dayLog.push(`☠️ ${member.name} fell in ${m.name}`)
-        // Move to archives.fallen will happen on mission finish
-      }
-    }
-    if (dayLog.length) m.log.unshift(dayLog.join(' · '))
-
+    
+    // Check if mission has ended
     if (state.day >= m.endOnDay) {
-      // Quest succeeds only if all planned battles were won
-      const battlesCleared = m.battlesCleared || 0
-      const battlesPlanned = m.battlesPlanned || 0
-      const combatSatisfied = battlesCleared >= battlesPlanned
-      if (combatSatisfied) {
-        state.money = Math.max(0, Math.floor(state.money + m.reward))
-        state.notoriety = Math.max(0, Math.floor(state.notoriety + m.fame))
-        m.log.unshift(`✅ Completed. +${m.reward}g, +${m.fame} notoriety`)
-        state.logs.events.unshift(`🏆 Mission complete: ${m.name} — +${m.reward}g, +${m.fame} fame`)
-      } else {
-        m.log.unshift(`❌ Failed — combat objectives not cleared (${battlesCleared}/${battlesPlanned})`)
-        state.logs.events.unshift(`💥 Mission failed: ${m.name} — combat not cleared`)
-      }
-      // Handle fallen
-      for (const member of party) {
-        if (member.alive === false) {
-          state.archives.fallen = state.archives.fallen || []
-          state.archives.fallen.unshift({ id: member.id, name: member.name, class: member.class, diedOnDay: state.day, cause: `Fell during ${m.name}`, level: member.baseLevel })
-          // Remove from roster
-          state.members = state.members.filter(x => x.id !== member.id)
-        } else {
-          // Sync back hp/mp and progression to roster member
-          const ref = state.members.find(x => x.id === member.id)
-          if (ref) {
-            ref.hp = member.hp ?? ref.hp
-            ref.mp = member.mp ?? ref.mp
-            ref.mpMax = member.mpMax ?? ref.mpMax
-            ref.baseLevel = member.baseLevel
-            ref.baseExp = member.baseExp
-            ref.classLevel = member.classLevel
-            ref.classExp = member.classExp
-            ref.skillLevels = member.skillLevels
-            ref.skillExp = member.skillExp
+      // Mission failed due to time
+      failed.push(m)
+      state.logs.events.unshift(`⏰ Mission failed: ${m.name} - Time expired`)
+      continue
+    }
+    
+    // Check if all battles are cleared
+    if ((m.battlesCleared || 0) >= (m.battlesPlanned || 1)) {
+      // Mission completed successfully
+      completed.push(m)
+      
+      // Award experience to party members
+      for (const member of m.party) {
+        if (member.alive !== false) {
+          // Base experience based on mission difficulty
+          const baseExp = Math.max(10, m.diff * 5)
+          // Bonus for higher difficulty missions
+          const difficultyBonus = Math.floor(m.diff / 2) * 3
+          // Random variation
+          const randomBonus = Math.floor(Math.random() * 10)
+          const totalExp = baseExp + difficultyBonus + randomBonus
+          
+          const result = addExperience(member, totalExp)
+          if (result.leveledUp) {
+            state.logs.events.unshift(`🎉 ${member.name} leveled up to Lv.${member.level}! (+${totalExp} EXP)`)
+          } else {
+            state.logs.events.unshift(`⭐ ${member.name} gained ${totalExp} experience from ${m.name}`)
           }
         }
       }
-      finished.push(m)
-    } else {
-      survivors.push(m)
+      
+      // Award money and notoriety
+      state.money += m.reward
+      state.notoriety += m.fame
+      state.logs.events.unshift(`💰 Mission completed: ${m.name} - +${m.reward}g, +${m.fame} notoriety`)
+      continue
     }
+    
+    // Mission still in progress
+    m.log.push(`Day ${state.day}: Mission continues...`)
   }
-  state.activeMissions = survivors
+  
+  // Remove completed and failed missions
+  state.activeMissions = state.activeMissions.filter(m => 
+    !completed.includes(m) && !failed.includes(m)
+  )
+  
+  // Archive completed missions
+  for (const m of completed) {
+    state.archives.quests.push({
+      id: m.id,
+      name: m.name,
+      expiredOnDay: state.day
+    })
+  }
+  
+  // Archive failed missions
+  for (const m of failed) {
+    state.archives.quests.push({
+      id: m.id,
+      name: m.name,
+      expiredOnDay: state.day
+    })
+  }
 }
 
 
