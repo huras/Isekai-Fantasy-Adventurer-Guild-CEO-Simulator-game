@@ -151,7 +151,7 @@ export function StoreProvider({ children, initial }: { children: React.ReactNode
     state.kitchen = state.kitchen || { foodStorage: [], waitingForBreakfast: [] }
     state.kitchen.waitingForBreakfast = []
     const day = state.day
-    const food = state.kitchen.foodStorage
+    const food = state.inventory
     for (const m of state.members) {
       if (m.alive === false) continue
       const idx = food.findIndex(f => f.category === 'food')
@@ -384,6 +384,15 @@ export function StoreProvider({ children, initial }: { children: React.ReactNode
       // Find mission and decrement remaining battles
       const m = state.activeMissions.find(mm => mm.id === b.missionId)
       if (!m) { state.battle = null; return }
+      // Sync battle ally HP/MP back to mission party so next waves don't reset
+      for (const ally of b.allies) {
+        const p = m.party.find(x => x.id === ally.id)
+        if (p) {
+          p.hp = Math.max(0, ally.hp)
+          if (typeof ally.mp === 'number') p.mp = Math.max(0, ally.mp)
+          if (p.hp <= 0) p.alive = false
+        }
+      }
       // Mark cleared
       m.battlesCleared = (m.battlesCleared || 0) + 1
       // Decrement one cleared wave from remaining

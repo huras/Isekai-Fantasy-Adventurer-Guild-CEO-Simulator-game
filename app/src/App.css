@@ -40,3 +40,36 @@
 .read-the-docs {
   color: #888;
 }
+
+/* Quest Rank Badge styles */
+.rank-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  font-weight: 700;
+  font-size: 12px;
+  letter-spacing: 0.5px;
+  color: #fff;
+  box-shadow: 0 1px 2px rgba(0,0,0,.25);
+}
+.rank-H { background: #6c757d; } /* gray */
+.rank-G { background: #5ba35b; } /* muted green */
+.rank-F { background: #3fae49; } /* green */
+.rank-E { background: #28a1a7; } /* teal */
+.rank-D { background: #3f7bd8; } /* blue */
+.rank-C { background: #6f42c1; } /* purple */
+.rank-B { background: #fd7e14; } /* orange */
+.rank-A { background: linear-gradient(135deg, #e63946, #ff7b7b); animation: rankPulse 1.8s ease-in-out infinite; }
+.rank-S { background: linear-gradient(135deg, #f5c542, #f59e0b); box-shadow: 0 0 8px rgba(245, 197, 66, .6); animation: rankGlow 1.6s ease-in-out infinite; }
+
+@keyframes rankGlow {
+  0%, 100% { box-shadow: 0 0 6px rgba(245, 197, 66, .45); transform: translateZ(0); }
+  50% { box-shadow: 0 0 12px rgba(245, 197, 66, .85); transform: translateZ(0); }
+}
+@keyframes rankPulse {
+  0%, 100% { filter: brightness(1); }
+  50% { filter: brightness(1.15); }
+}

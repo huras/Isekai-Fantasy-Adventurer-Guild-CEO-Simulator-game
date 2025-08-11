@@ -12,12 +12,8 @@ export function Shop() {
   const buy = (item: ShopItem) => {
     if (!canAfford(item.price)) return
     spendMoney(state, item.price)
-    if (item.category === 'food') {
-      state.kitchen = state.kitchen || { foodStorage: [], waitingForBreakfast: [] }
-      state.kitchen.foodStorage.push(item)
-    } else {
-      state.inventory.push(item)
-    }
+    // All purchases go to guild inventory. Food consumption will pull from inventory.
+    state.inventory.push(item)
     state.logs.events.unshift(`Purchased: ${item.name} (-${item.price}g)`) 
     emit()
   }
@@ -89,6 +85,7 @@ export function Shop() {
                   <div className="text-start">
                     <div className="fw-semibold">{item.name}</div>
                     <div className="small text-muted">{item.price}g</div>
+                    <div className="small text-muted">{item.desc}</div>
                   </div>
                 </button>
               ))}

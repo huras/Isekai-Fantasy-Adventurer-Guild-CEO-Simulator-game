@@ -1,5 +1,6 @@
 import React, { useMemo, useRef, useState } from 'react'
 import { getSpriteStyleFromUrl } from '../core/items'
+import { ProgressBar } from './ProgressBar'
 import type { InventoryItem, ShopItem, Stats } from '../core/types'
 import { useStore } from '../core/store'
 
@@ -156,7 +157,14 @@ export function AdventurerModal({ open, onClose, adventurer }: { open: boolean; 
                     <div className="small text-muted">STR {adventurer.stats.str} · INT {adventurer.stats.int} · AGI {adventurer.stats.agi} · SPR {adventurer.stats.spr}</div>
                     <div className="small text-muted">
                       {typeof adventurer.hpMax === 'number' || typeof adventurer.hp === 'number' ? (
-                        <span className="me-2">HP {adventurer.hp ?? adventurer.stats.hp ?? '-'}{typeof adventurer.hpMax === 'number' ? `/${adventurer.hpMax}` : ''}</span>
+                        <span className="me-2 d-inline-flex align-items-center gap-1">
+                          <ProgressBar variant="hp" value={(adventurer.hp ?? adventurer.stats.hp ?? 0) as number} max={(adventurer.hpMax as number) ?? ((adventurer.stats.hp as number) || 0)} width={120} height={8} />
+                        </span>
+                      ) : null}
+                      {typeof (adventurer as any).mpMax === 'number' || typeof (adventurer as any).mp === 'number' ? (
+                        <span className="me-2 d-inline-flex align-items-center gap-1">
+                          <ProgressBar variant="mp" value={((adventurer as any).mp ?? 0) as number} max={((adventurer as any).mpMax ?? 0) as number} width={120} height={8} />
+                        </span>
                       ) : null}
                       {typeof adventurer.speed === 'number' || typeof adventurer.stats.speed === 'number' ? (
                         <span className="me-2">Speed {adventurer.speed ?? adventurer.stats.speed}</span>

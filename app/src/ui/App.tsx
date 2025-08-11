@@ -13,6 +13,7 @@ import { Events } from './Events'
 import { Expired } from './Expired'
 import { Tilesets } from './Tilesets'
 import { Items } from './Items'
+import { GuildInventory } from './GuildInventory'
 import { NextDayFAB } from './NextDayFAB'
 
 function MainTabs() {
@@ -26,6 +27,7 @@ function MainTabs() {
     { key: 'kitchen', label: 'Kitchen (dev)', icon: '🍳', render: () => <Kitchen /> },
     { key: 'tilesets', label: 'Tilesets (admin)', icon: '🧩', render: () => <Tilesets /> },
     { key: 'items', label: 'Items (admin)', icon: '🎒', render: () => <Items /> },
+    { key: 'guild-inventory', label: 'Guild Inventory', icon: '📦', render: () => <GuildInventory /> },
     { key: 'shop', label: 'Shop', icon: '🛒', render: () => <Shop /> },
     { key: 'battle', label: inBattle ? 'Battle (Active)' : 'Battle', icon: '⚔️', highlight: inBattle, render: () => <Battle /> },
     { key: 'events', label: 'Events', icon: '💬', render: () => <Events /> },
