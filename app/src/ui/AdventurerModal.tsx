@@ -1,5 +1,5 @@
 import React from 'react'
-import type { Stats } from '../core/types'
+import type { ShopItem, Stats } from '../core/types'
 
 type AdventurerLike = {
   id: string
@@ -15,6 +15,7 @@ type AdventurerLike = {
   hpMax?: number
   speed?: number
   skills?: string[]
+  items?: ShopItem[]
   weekAppeared?: number
   expiresOnWeek?: number
 }
@@ -47,7 +48,7 @@ export function AdventurerModal({ open, onClose, adventurer }: { open: boolean; 
             <div className="row g-3">
               <div className="col-12 col-md-4 d-flex justify-content-center">
                 {adventurer.avatar ? (
-                  <div style={{ height: 480, borderRadius: 12, overflow: 'hidden', border: '1px solid rgba(255,255,255,.1)' }}>
+                  <div style={{ borderRadius: 12, overflow: 'hidden', border: '1px solid rgba(255,255,255,.1)' }}>
                     <img
                       src={adventurer.avatar}
                       alt={adventurer.name}
@@ -88,6 +89,16 @@ export function AdventurerModal({ open, onClose, adventurer }: { open: boolean; 
                     <div className="d-flex flex-wrap gap-1">
                       {adventurer.skills.map((s, i) => (
                         <span key={i} className="badge text-bg-secondary">{s}</span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {Array.isArray(adventurer.items) && (
+                  <div className="mb-2">
+                    <div className="fw-bold mb-1">Items ({adventurer.items.length}/12)</div>
+                    <div className="d-flex flex-wrap gap-1">
+                      {adventurer.items.slice(0, 12).map((it) => (
+                        <span key={it.id} className="badge text-bg-light border">{it.name}</span>
                       ))}
                     </div>
                   </div>

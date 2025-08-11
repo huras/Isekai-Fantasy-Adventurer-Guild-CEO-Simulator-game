@@ -27,6 +27,7 @@ export function Recruitment() {
     if (idx === -1) return
     const c = state.candidates.splice(idx, 1)[0]
     const hpMax = c.stats.hp ?? 20
+    const mpMax = 10 + Math.floor((c.stats.spr ?? 3) / 2)
     const recruitBonus = state.modifiers.recruitStatBonus || 0
     const member = {
       id: `mem_${Math.random().toString(36).slice(2, 9)}`,
@@ -45,8 +46,17 @@ export function Recruitment() {
       },
       hpMax,
       hp: hpMax,
+      mpMax,
+      mp: mpMax,
       speed: Math.max(1, Math.floor(((c.stats.agi ?? 3) + recruitBonus) / 3)),
       skills: c.skills || [],
+      baseLevel: 1,
+      baseExp: 0,
+      classLevel: 1,
+      classExp: 0,
+      skillLevels: (c.skills || []).reduce<Record<string, number>>((acc, s) => { acc[s] = 1; return acc }, {}),
+      skillExp: {},
+      alive: true,
     }
     state.members.push(member as any)
     emit()

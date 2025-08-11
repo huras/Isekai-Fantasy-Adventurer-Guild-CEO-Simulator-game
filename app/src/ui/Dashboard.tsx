@@ -11,15 +11,16 @@ export function Dashboard() {
         <div className="row g-3">
           <div className="col-md-4">
             <div className="p-3 border rounded-3">
-              <div>Money: {state.money}g</div>
-              <div>Notoriety: {state.notoriety}</div>
-              <div>Day {state.day} / Week {week}</div>
-              <div>Members: {state.members.length}</div>
+              <div>💰 Money: {state.money}g</div>
+              <div>⭐ Notoriety: {state.notoriety}</div>
+              <div>📅 Day {state.day} / Week {week}</div>
+              <div>🧑‍🚀 Members: {state.members.length}</div>
+              <div>🧭 Active missions: {state.activeMissions?.length || 0}</div>
             </div>
           </div>
           <div className="col-md-8">
             <div className="p-3 border rounded-3 small text-muted">
-              Tips: Recruit weekly, assign quests, buy artifacts, increase notoriety.
+              💡 Tips: Recruit weekly, assign quests, buy artifacts, increase notoriety.
             </div>
           </div>
         </div>

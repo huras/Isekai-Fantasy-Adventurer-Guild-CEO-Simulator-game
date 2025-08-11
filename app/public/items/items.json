@@ -1,0 +1,125 @@
+[
+  {
+    "id": "1",
+    "name": "Amora",
+    "desc": "Uma fruta.",
+    "price": 5,
+    "category": "food",
+    "sprite": {
+      "row": 0,
+      "col": 0
+    },
+    "tilesetUrl": "/items/tileset_1.png",
+    "sellable": true
+  },
+  {
+    "id": "1754849867652",
+    "name": "Tomato",
+    "desc": "A healthy tomato",
+    "price": 12,
+    "category": "food",
+    "sprite": {
+      "row": 0,
+      "col": 1
+    },
+    "tilesetUrl": "/items/tileset_1.png",
+    "sellable": true
+  },
+  {
+    "id": "1754864404298",
+    "name": "Uva",
+    "price": 8,
+    "category": "food",
+    "sprite": {
+      "row": 0,
+      "col": 6
+    },
+    "tilesetUrl": "/items/tileset_1.png",
+    "sellable": true
+  },
+  {
+    "id": "1754864425962",
+    "name": "Pineaple",
+    "price": 13,
+    "category": "food",
+    "sprite": {
+      "row": 0,
+      "col": 11
+    },
+    "tilesetUrl": "/items/tileset_1.png",
+    "sellable": true
+  },
+  {
+    "id": "1754864563561",
+    "name": "Banana",
+    "price": 7,
+    "category": "food",
+    "sprite": {
+      "row": 0,
+      "col": 12
+    },
+    "tilesetUrl": "/items/tileset_1.png",
+    "sellable": true
+  },
+  {
+    "id": "1754864578481",
+    "name": "Small HP Potion",
+    "desc": "Restores 20 HP",
+    "price": 20,
+    "category": "potion",
+    "sprite": {
+      "row": 2,
+      "col": 7
+    },
+    "tilesetUrl": "/items/tileset_1.png",
+    "sellable": true
+  },
+  {
+    "id": "1754878147635",
+    "name": "Short Sword",
+    "price": 25,
+    "category": "weapon",
+    "sprite": {
+      "row": 5,
+      "col": 0
+    },
+    "tilesetUrl": "/items/tileset_1.png",
+    "sellable": true
+  },
+  {
+    "id": "1754878159603",
+    "name": "Long Sword",
+    "price": 150,
+    "category": "weapon",
+    "sprite": {
+      "row": 5,
+      "col": 1
+    },
+    "tilesetUrl": "/items/tileset_1.png",
+    "sellable": true
+  },
+  {
+    "id": "1754878173083",
+    "name": "Broad Sword",
+    "price": 500,
+    "category": "weapon",
+    "sprite": {
+      "row": 5,
+      "col": 5
+    },
+    "tilesetUrl": "/items/tileset_1.png",
+    "sellable": true
+  },
+  {
+    "id": "1754879231663",
+    "name": "Cheese",
+    "price": 10,
+    "category": "food",
+    "sprite": {
+      "row": 1,
+      "col": 9
+    },
+    "tilesetUrl": "/items/tileset_1.png",
+    "sellable": true
+  }
+]

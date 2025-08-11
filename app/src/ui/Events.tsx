@@ -12,6 +12,16 @@ export function Events() {
             <div key={i}>• {e}</div>
           ))}
         </div>
+        {state.archives?.fallen?.length ? (
+          <div className="mt-3">
+            <h6 className="mb-2">Graveyard ⚰️</h6>
+            <div className="small text-muted">
+              {state.archives.fallen.slice(0, 10).map((f, i) => (
+                <div key={i}>☠️ {f.name} — {f.class} · D{f.diedOnDay} · {f.cause}</div>
+              ))}
+            </div>
+          </div>
+        ) : null}
       </div>
     </div>
   )
