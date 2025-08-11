@@ -1,4 +1,4 @@
-import type { ActiveMission, GameState, Member, Quest } from './types'
+import type { ActiveMission, DifficultyRank, GameState, JobKind, Member, Quest, TargetKind } from './types'
 import { dailyUpkeep } from './money'
 
 function uid(prefix = 'quest') { return `${prefix}_${Math.random().toString(36).slice(2, 9)}` }
@@ -37,59 +37,88 @@ function expirationDayFor(diff: number, currentDay: number): number {
   return currentDay + durationDays
 }
 
-const QUEST_POOLS = {
-  Beginner: [
-    { name: '🧹 Rat Problem', diff: 1, reward: 30, fame: 1, emoji: '🧹', tags: ['Pest Control'] },
-    { name: '📦 Lost Parcel', diff: 2, reward: 45, fame: 1, emoji: '📦', tags: ['Delivery'] },
-    { name: '🌿 Herb Gathering', diff: 2, reward: 50, fame: 2, emoji: '🌿', tags: ['Gathering'] },
-    { name: '🐇 Horned Rabbit Culling', diff: 2, reward: 55, fame: 2, emoji: '🐇', tags: ['Slay Small Monsters'] },
-  ],
-  Combat: [
-    { name: '🛡️ Escort Caravan', diff: 5, reward: 150, fame: 5, emoji: '🛡️', tags: ['Escort'] },
-    { name: '🧪 Slime Extermination', diff: 4, reward: 110, fame: 3, emoji: '🧪', tags: ['Extermination'] },
-    { name: '⚔️ Hunt Rogue Mages', diff: 6, reward: 220, fame: 6, emoji: '⚔️', tags: ['Hunt'] },
-  ],
-  Exploration: [
-    { name: '🗺️ Royal Reconnaissance', diff: 7, reward: 300, fame: 9, emoji: '🗺️', tags: ['Mapping'] },
-    { name: '🏚️ Cursed Ruins', diff: 9, reward: 380, fame: 12, emoji: '🏚️', tags: ['Relic', 'Curse Risk'] },
-  ],
-  Legendary: [
-    { name: '🐉 Ancient Dragon', diff: 14, reward: 1100, fame: 30, emoji: '🐉', tags: ['High Reward', 'Dangerous Terrain'] },
-    { name: '🌌 Abyssal Rift', diff: 15, reward: 1300, fame: 40, emoji: '🌌', tags: ['Dimensional', 'No Magic Zone'] },
-  ],
-  Comedic: [
-    { name: '👗 Judge Monster Beauty Contest', diff: 3, reward: 90, fame: 2, emoji: '👗', tags: ['Oddball'] },
-  ],
-} as const
+// Fully procedural; curated pools removed
 
-function pickPoolByNotoriety(n: number) {
-  if (n < 10) return ['Beginner'] as const
-  if (n < 25) return ['Beginner', 'Combat'] as const
-  if (n < 50) return ['Combat', 'Exploration'] as const
-  return ['Exploration', 'Legendary', 'Comedic'] as const
+// No pool picking; procedural generation uses notoriety to bias rank
+
+// Difficulty rank helpers
+const RANKS: DifficultyRank[] = ['H','G','F','E','D','C','B','A','S']
+function rankFromDiff(diff: number): DifficultyRank {
+  if (diff >= 14) return 'S'
+  if (diff >= 12) return 'A'
+  if (diff >= 10) return 'B'
+  if (diff >= 8) return 'C'
+  if (diff >= 6) return 'D'
+  if (diff >= 5) return 'E'
+  if (diff >= 4) return 'F'
+  if (diff >= 3) return 'G'
+  return 'H'
+}
+function randomRankForNotoriety(n: number): DifficultyRank {
+  const bias = n < 10 ? 0 : n < 25 ? 2 : n < 50 ? 4 : 6
+  const idx = Math.max(0, Math.min(RANKS.length - 1, Math.floor(Math.random() * 3) + bias))
+  return RANKS[idx]
+}
+function diffRangeForRank(rank: DifficultyRank): [number, number] {
+  switch (rank) {
+    case 'H': return [1, 2]
+    case 'G': return [2, 3]
+    case 'F': return [3, 4]
+    case 'E': return [4, 5]
+    case 'D': return [5, 6]
+    case 'C': return [7, 8]
+    case 'B': return [9, 10]
+    case 'A': return [12, 13]
+    default: return [14, 15] // S
+  }
+}
+
+// Procedural quest generator
+// Keep emojis minimal and meaningful (single per quest based on job)
+const JOB_EMOJI: Record<JobKind, string> = { Find: '🔎', Deliver: '📦', Escort: '🛡️', Protect: '🛡️', Kill: '⚔️' }
+const PERSON_SEEDS = ['Noble', 'Scholar', 'Merchant', 'Priest', 'Runaway', 'Guard Captain']
+const MONSTER_SEEDS = ['Slime', 'Goblin', 'Bandit', 'Wolf', 'Ogre', 'Vampire']
+const ITEM_SEEDS = ['Ancient Relic', 'Love Letter', 'Healing Tonic', 'Encrypted Ledger', 'Dragon Egg', 'Lost Parcel']
+const LOCATION_SEEDS = ['Abandoned Mine', 'Cursed Chapel', 'Haunted Library', 'Forest Shrine', 'Mountain Pass', 'Sunken Ruins']
+
+function randomOf<T>(arr: T[]): T { return arr[Math.floor(Math.random() * arr.length)] }
+
+function proceduralQuest(notoriety: number, day: number): Quest {
+  const job: JobKind = randomOf(['Find','Deliver','Escort','Protect','Kill'])
+  const target: TargetKind = randomOf(job === 'Escort' ? ['Person','Item'] : job === 'Kill' ? ['Person','Monster'] : job === 'Protect' ? ['Person','Monster','Item','Location'] : job === 'Deliver' ? ['Person','Item','Monster'] : ['Person','Monster','Item','Location'])
+  const rank = randomRankForNotoriety(notoriety)
+  const [minD, maxD] = diffRangeForRank(rank)
+  const diff = Math.floor(Math.random() * (maxD - minD + 1)) + minD
+  const daysRequired = Math.max(1, diff <= 3 ? 1 : diff <= 6 ? 2 : diff <= 10 ? 3 : 4 + Math.floor(Math.random() * 2))
+  // Title pieces
+  const subject = target === 'Person' ? randomOf(PERSON_SEEDS)
+    : target === 'Monster' ? randomOf(MONSTER_SEEDS)
+    : target === 'Item' ? randomOf(ITEM_SEEDS)
+    : randomOf(LOCATION_SEEDS)
+  const emoji = JOB_EMOJI[job]
+  const verb = job === 'Find' ? 'Find' : job === 'Deliver' ? 'Deliver' : job === 'Escort' ? 'Escort' : job === 'Protect' ? 'Protect' : 'Eliminate'
+  const name = `${emoji} ${verb} ${subject}`
+  // Type and rewards
+  const type = job === 'Kill' || job === 'Protect' ? 'Combat' : job === 'Escort' ? 'Exploration' : 'Beginner'
+  const baseReward = diff * 25 + Math.floor(Math.random() * 15)
+  const reward = baseReward + (job === 'Kill' ? 20 : 0)
+  const fame = Math.max(1, Math.floor(diff / 2) + (rank === 'S' ? 5 : rank === 'A' ? 3 : 0))
+  // Description
+  const desc = `${verb} ${subject}. Rank ${rank}. Trip ~${daysRequired}d.`
+  const tags: string[] = [job, target, type]
+  return { id: uid(), name, desc, diff, rank, reward, fame, day, expiresOnDay: expirationDayFor(diff, day), daysRequired, type, tags, emoji, job, target }
 }
 
 export function generateQuestList(notoriety: number, day: number): Quest[] {
-  const tier = notoriety < 10 ? 1 : notoriety < 25 ? 2 : notoriety < 50 ? 3 : 4
-  const poolKeys = pickPoolByNotoriety(notoriety)
-  const pool = poolKeys.flatMap(k => (QUEST_POOLS as any)[k]).map((q: any) => ({ ...q, type: kFromName(q.name) }))
   const count = Math.min(8, Math.max(3, 3 + Math.floor(notoriety / 15)))
   const list: Quest[] = []
   for (let i = 0; i < count; i++) {
-    const q = { ...pool[Math.floor(Math.random() * pool.length)] }
-    const daysRequired = Math.max(1, q.diff <= 3 ? 1 : q.diff <= 6 ? 2 : q.diff <= 10 ? 3 : 4 + Math.floor(Math.random() * 2))
-    list.push({ id: uid(), name: q.name, diff: q.diff, reward: q.reward, fame: q.fame, day, expiresOnDay: expirationDayFor(q.diff, day), daysRequired, type: q.type, tags: q.tags, emoji: q.emoji })
+    list.push(proceduralQuest(notoriety, day))
   }
   return list
 }
 
-function kFromName(name: string): Quest['type'] {
-  if (name.includes('Dragon') || name.includes('Abyssal')) return 'Legendary'
-  if (name.includes('Cursed') || name.includes('Reconnaissance')) return 'Exploration'
-  if (name.includes('Parcel') || name.includes('Herb') || name.includes('Rabbit') || name.includes('Rat')) return 'Beginner'
-  if (name.includes('Contest')) return 'Comedic'
-  return 'Combat'
-}
+// No name-based typing; type is derived in the generator
 
 export function assignMember(state: GameState, questId: string, memberId: string) {
   const quest = state.quests.find(q => q.id === questId)
@@ -136,11 +165,14 @@ export function runQuest(state: GameState, questId: string) {
     id: quest.id,
     name: quest.name,
     diff: quest.diff,
+    rank: quest.rank,
     reward: quest.reward,
     fame: quest.fame,
     type: quest.type,
     tags: quest.tags,
     emoji: quest.emoji,
+    job: quest.job,
+    target: quest.target,
     dayStarted: state.day,
     endOnDay: state.day + duration,
     party: party.map(p => ({ ...p })),
@@ -193,15 +225,35 @@ export function advanceMissionsOneDay(state: GameState) {
     const dayLog: string[] = []
     for (const member of party) {
       if (member.alive === false) continue
-      const dmgMax = Math.max(1, Math.floor(m.diff * 2))
+      // Job/target multipliers
+      const job = m.job || 'Find'
+      const target = m.target || 'Item'
+      const dmgMult = (
+        job === 'Kill' ? 1.5 :
+        job === 'Protect' ? 1.25 :
+        job === 'Escort' ? 1.1 :
+        job === 'Deliver' ? 0.8 :
+        0.85 // Find
+      ) * (target === 'Monster' ? 1.15 : target === 'Location' ? 1.0 : 0.95)
+      const mpMult = (
+        job === 'Find' ? 1.35 :
+        job === 'Escort' ? 1.1 :
+        job === 'Protect' ? 1.0 :
+        job === 'Deliver' ? 0.9 :
+        0.8 // Kill
+      ) * (target === 'Location' ? 1.15 : target === 'Monster' ? 0.95 : 1.0)
+
+      const dmgMax = Math.max(1, Math.floor(m.diff * 2 * dmgMult))
       const dmg = Math.floor(Math.random() * (dmgMax + 1))
       member.hp = Math.max(0, (member.hp ?? member.hpMax) - dmg)
-      const mpDrain = Math.floor(Math.random() * (m.diff + 2))
+      const mpDrain = Math.floor(Math.random() * Math.max(2, Math.floor((m.diff + 2) * mpMult)))
       member.mpMax = member.mpMax ?? 10 + Math.floor((member.stats.spr || 3) / 2)
       member.mp = Math.max(0, (member.mp ?? member.mpMax!) - mpDrain)
       // XP gains per day
       member.baseLevel = member.baseLevel ?? 1
-      member.baseExp = (member.baseExp ?? 0) + 5 + Math.floor(m.diff / 2)
+      const baseXpGain = 5 + Math.floor(m.diff / 2)
+      const baseXpMult = job === 'Kill' ? 1.3 : job === 'Protect' ? 1.15 : job === 'Escort' ? 1.1 : 1.0
+      member.baseExp = (member.baseExp ?? 0) + Math.floor(baseXpGain * baseXpMult)
       while ((member.baseExp ?? 0) >= 20 + (member.baseLevel - 1) * 10) {
         member.baseExp = (member.baseExp ?? 0) - (20 + (member.baseLevel - 1) * 10)
         member.baseLevel += 1
@@ -213,7 +265,8 @@ export function advanceMissionsOneDay(state: GameState) {
         member.hpMax += 1
       }
       member.classLevel = member.classLevel ?? 1
-      member.classExp = (member.classExp ?? 0) + (m.type === 'Magic' ? 6 : 4)
+      const classBase = 4 + (m.type === 'Magic' ? 2 : 0) + (job === 'Kill' ? 1 : 0)
+      member.classExp = (member.classExp ?? 0) + classBase
       while ((member.classExp ?? 0) >= 25 + (member.classLevel - 1) * 12) {
         member.classExp = (member.classExp ?? 0) - (25 + (member.classLevel - 1) * 12)
         member.classLevel += 1
@@ -223,7 +276,9 @@ export function advanceMissionsOneDay(state: GameState) {
       member.skillExp = member.skillExp || {}
       for (const skill of member.skills || []) {
         member.skillLevels[skill] = member.skillLevels[skill] || 1
-        member.skillExp[skill] = (member.skillExp[skill] || 0) + 3 + Math.floor(m.diff / 3)
+        const skillGain = 3 + Math.floor(m.diff / 3)
+        const skillMult = job === 'Find' ? 1.2 : job === 'Escort' ? 1.1 : job === 'Kill' ? 1.15 : 1.0
+        member.skillExp[skill] = (member.skillExp[skill] || 0) + Math.floor(skillGain * skillMult)
         while ((member.skillExp[skill] || 0) >= 15 + (member.skillLevels[skill] - 1) * 8) {
           member.skillExp[skill] = (member.skillExp[skill] || 0) - (15 + (member.skillLevels[skill] - 1) * 8)
           member.skillLevels[skill] += 1

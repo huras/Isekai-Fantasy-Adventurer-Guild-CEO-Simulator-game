@@ -185,7 +185,7 @@ export function StoreProvider({ children, initial }: { children: React.ReactNode
       state.quests = activeQuests
       if (expiredQuests.length) {
         state.archives.quests.unshift(...expiredQuests)
-        expiredQuests.forEach(eq => state.logs.events.unshift(`Quest expired: ${eq.name} (D${eq.expiredOnDay})`))
+        expiredQuests.forEach(eq => state.logs.events.unshift(`⌛ Quest expired: ${eq.name} (D${eq.expiredOnDay})`))
       }
 
       // Daily: generate new quests and append
@@ -217,9 +217,9 @@ export function StoreProvider({ children, initial }: { children: React.ReactNode
           }
         }
         state.candidates = surviving
-        if (expired.length) {
+          if (expired.length) {
           state.archives.candidates.unshift(...expired)
-          expired.forEach(ec => state.logs.events.unshift(`Candidate expired: ${ec.name} — ${ec.class} (W${ec.expiredOnWeek})`))
+          expired.forEach(ec => state.logs.events.unshift(`🕰️ Candidate expired: ${ec.name} — ${ec.class} (W${ec.expiredOnWeek})`))
         }
         // Append new weekly candidates
         const newCandidates = await generateCandidates(state.notoriety, state.week)

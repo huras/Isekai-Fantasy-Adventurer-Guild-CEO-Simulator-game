@@ -58,9 +58,10 @@ export function Quests() {
                 <div className="d-flex justify-content-between align-items-center">
                   <div>
                     <strong>{q.name}</strong>
-                    <span className="text-muted small ms-1">· {q.emoji || '🧭'} Diff {q.diff} · Reward {q.reward}g · Fame +{q.fame}</span>
+                    <span className="text-muted small ms-1">· {q.emoji || '🧭'} Rank {q.rank || 'H'} · Diff {q.diff} · Reward {q.reward}g · Fame +{q.fame}</span>
                     <span className="text-muted small ms-1">· Expires D{q.expiresOnDay}</span>
                     {q.daysRequired && <span className="text-muted small ms-1">· Trip {q.daysRequired}d</span>}
+                    {q.desc && <div className="small text-muted">{q.desc}</div>}
                     {Array.isArray(q.tags) && q.tags.length > 0 && (
                       <span className="ms-2 small">{q.tags.slice(0, 3).map(t => `[#${t}]`).join(' ')}</span>
                     )}
@@ -114,7 +115,7 @@ export function Quests() {
                   <div className="d-flex justify-content-between align-items-center">
                     <div>
                       <strong>{m.name}</strong>
-                      <span className="text-muted small ms-1">· {m.emoji || '🧭'} Diff {m.diff} · Ends D{m.endOnDay}</span>
+                      <span className="text-muted small ms-1">· {m.emoji || '🧭'} Rank {m.rank || 'H'} · Diff {m.diff} · Ends D{m.endOnDay}</span>
                       <span className="text-muted small ms-1">· Party {m.party.length}</span>
                     </div>
                   </div>

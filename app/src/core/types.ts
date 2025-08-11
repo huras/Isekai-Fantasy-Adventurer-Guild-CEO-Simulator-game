@@ -1,5 +1,9 @@
 export type Stats = { str: number; int: number; agi: number; spr: number; hp?: number; speed?: number };
 
+export type DifficultyRank = 'H' | 'G' | 'F' | 'E' | 'D' | 'C' | 'B' | 'A' | 'S'
+export type JobKind = 'Find' | 'Deliver' | 'Escort' | 'Protect' | 'Kill'
+export type TargetKind = 'Person' | 'Monster' | 'Item' | 'Location'
+
 export type Member = {
   id: string;
   name: string;
@@ -50,6 +54,7 @@ export type Quest = {
   name: string;
   desc?: string;
   diff: number;
+  rank?: DifficultyRank;
   reward: number;
   fame: number;
   day: number;
@@ -58,6 +63,8 @@ export type Quest = {
   type?: 'Beginner' | 'Combat' | 'Exploration' | 'Magic' | 'Political' | 'Legendary' | 'Comedic';
   tags?: string[];
   emoji?: string;
+  job?: JobKind;
+  target?: TargetKind;
   assigned?: Member[];
 };
 
@@ -157,11 +164,14 @@ export type ActiveMission = {
   id: string; // links to the quest id
   name: string;
   diff: number;
+  rank?: DifficultyRank;
   reward: number;
   fame: number;
   type?: Quest['type'];
   tags?: string[];
   emoji?: string;
+  job?: JobKind;
+  target?: TargetKind;
   dayStarted: number;
   endOnDay: number;
   party: Member[];
