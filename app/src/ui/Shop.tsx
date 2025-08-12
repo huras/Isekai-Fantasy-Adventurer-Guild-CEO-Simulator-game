@@ -14,7 +14,7 @@ export function Shop() {
     if (!canAfford(item.price)) return
     spendMoney(state, item.price)
     // All purchases go to guild inventory. Food consumption will pull from inventory.
-    state.inventory.push(item)
+    state.inventory = [...state.inventory, { ...item }]
     state.logs.events.unshift(`Purchased: ${item.name} (-${item.price}g)`) 
     emit()
   }
@@ -27,10 +27,11 @@ export function Shop() {
     // Find units carrying this item
     const carriers: { member: Member; count: number }[] = []
     for (const member of state.members) {
-      if (member.items) {
-        const memberItem = member.items.find(i => i.id === itemId)
-        if (memberItem && memberItem.qty && memberItem.qty > 0) {
-          carriers.push({ member, count: memberItem.qty })
+      const items = (member.items || []).filter(Boolean) as { id: string; qty?: number }[]
+      if (items.length > 0) {
+        const memberItem = items.find(i => i.id === itemId)
+        if (memberItem && (memberItem.qty || 1) > 0) {
+          carriers.push({ member, count: memberItem.qty || 1 })
         }
       }
     }

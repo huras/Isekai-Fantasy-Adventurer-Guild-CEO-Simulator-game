@@ -1,6 +1,7 @@
 import React, { useMemo, useState, useEffect } from 'react'
 import type { ItemCategoryId, ShopItem } from '../core/types'
 import { useStore } from '../core/store'
+import { applyItemEffect } from '../core/effects'
 import { getSpriteStyle, getSpriteStyleFromUrl } from '../core/items'
 import { getCategoryEmoji, getCategoryName, getCategories, loadItemCategories } from '../core/categories'
 
@@ -148,7 +149,7 @@ export function GuildInventory() {
         ) : (
           <div className="d-flex flex-wrap gap-2">
             {sorted.map((it: any) => (
-              <div key={`${it.id}_${it._qty ?? Math.random()}`} className="border rounded p-2 d-flex align-items-center gap-2" style={{ width: 320 }} title={it.desc}>
+              <div key={`${it.id}_${it._qty ?? Math.random()}`} className="border rounded p-2 d-flex align-items-center gap-2" style={{ width: 360 }} title={it.desc}>
                 <div style={{ ...(it.tilesetUrl ? getSpriteStyleFromUrl(it.sprite, it.tilesetUrl) : getSpriteStyle(it.sprite)) }} />
                 <div className="flex-grow-1">
                   <div className="fw-semibold text-truncate">{it.name}</div>
@@ -157,6 +158,18 @@ export function GuildInventory() {
                 {groupStacks && typeof it._qty === 'number' && it._qty > 1 && (
                   <span className="badge text-bg-secondary" title="Stack quantity">×{it._qty}</span>
                 )}
+                <div className="btn-group btn-group-sm">
+                  <button className="btn btn-outline-success" disabled={!((state.itemsCatalog.find(ci => ci.id === it.id) as any)?.use)} onClick={() => {
+                    // Use on the Guildmaster by default
+                    const gm = state.members.find(m => m.isPlayer)
+                    applyItemEffect(it, { state, source: 'guild', user: gm || null, target: gm || null, battle: null })
+                    // consume one from guild inventory
+                    const idx = state.inventory.findIndex(g => g.id === it.id)
+                    if (idx >= 0) { state.inventory = [...state.inventory.slice(0, idx), ...state.inventory.slice(idx + 1)] }
+                    // emit via store
+                    ;(useStore() as any).emit?.()
+                  }}>Use</button>
+                </div>
               </div>
             ))}
           </div>

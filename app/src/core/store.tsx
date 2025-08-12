@@ -79,7 +79,8 @@ export function StoreProvider({ children, initial }: { children: React.ReactNode
       const player: Member = {
         id: 'player', isPlayer: true, name: 'You', class: 'Guildmaster', personality: 'heroic', gender: 'male',
         appearance: '♂️ Summoned human with dark hair and determined eyes; beauty 7/10',
-        upkeep: 0, stats: { str: 6, mag: 6, skill: 6, speed: 3, luck: 6, defense: 4, resistance: 4 }, hpMax: 40, hp: 40, speed: 3, skills: ['Leadership', 'Tactics'],
+        upkeep: 0, stats: { str: 6, mag: 6, skill: 6, speed: 3, luck: 6, defense: 4, resistance: 4 }, hpMax: 40, hp: 18, mp: 10, mpMax: 300,
+         speed: 3, skills: ['Leadership', 'Tactics'],
         level: 1, experience: 0, experienceCurve: 'normal',
         // Ensure Guildmaster starts with specific items (Short Sword + two fruits) using stubs until catalog loads.
         items: [
@@ -88,6 +89,9 @@ export function StoreProvider({ children, initial }: { children: React.ReactNode
           { id: '1754864404298' },
           { id: '1754864404298' },
           { id: '1754864404298' },
+          { id: '1754864578481' },
+          { id: '1754955449841' },
+          { id: '1754935730336' },
         ] as InventoryItem[],
       }
       // Direct mutate then emit for simplicity
@@ -139,11 +143,22 @@ export function StoreProvider({ children, initial }: { children: React.ReactNode
         state.shop = state.itemsCatalog.filter(i => (i as any).sellable)
         console.log('[ItemsLoader] derived shop count:', state.shop.length)
         state.itemsLoaded = true
-        // No need to sync member item objects; inventory stores only references (id/qty)
-        const gm = state.members.find(m => m.isPlayer)
-        if (gm && Array.isArray(gm.items)) {
-          // Ensure quantities default
-          gm.items = gm.items.map((it: any) => ({ id: it.id, qty: it.qty || 1 })) as any
+        // Normalize member inventories: ensure qty and instanceIds per item
+        function makeIds(n: number): string[] {
+          const out: string[] = []
+          for (let i = 0; i < n; i++) out.push(`inst_${(crypto as any)?.randomUUID?.() || Math.random().toString(36).slice(2, 11)}`)
+          return out
+        }
+        for (const m of state.members) {
+          if (Array.isArray(m.items)) {
+            m.items = m.items.map((it: any) => {
+              const qty = Math.max(1, it?.qty || 1)
+              const ids: string[] = Array.isArray(it?.instanceIds) ? [...it.instanceIds] : []
+              if (ids.length < qty) ids.push(...makeIds(qty - ids.length))
+              if (ids.length > qty) ids.length = qty
+              return { id: it.id, qty, instanceIds: ids } as any
+            }) as any
+          }
         }
         console.log('[ItemsLoader] itemsLoaded set to true')
         dispatch({ type: 'emit' })
@@ -157,6 +172,12 @@ export function StoreProvider({ children, initial }: { children: React.ReactNode
     state.kitchen = state.kitchen || { foodStorage: [], waitingForBreakfast: [] }
     state.kitchen.waitingForBreakfast = []
     const day = state.day
+    // Clear expired buffs and keep active ones
+    for (const m of state.members) {
+      if (Array.isArray(m.activeBuffs)) {
+        m.activeBuffs = m.activeBuffs.filter(b => b.expiresOnDay > day)
+      }
+    }
     const food = state.inventory
     for (const m of state.members) {
       if (m.alive === false) continue

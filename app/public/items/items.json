@@ -30,6 +30,7 @@
   {
     "id": "1754864404298",
     "name": "Uva",
+    "desc": "A sweet bunch. Restores 5 HP",
     "price": 8,
     "category": "food",
     "sprite": {
@@ -38,7 +39,12 @@
     },
     "tilesetUrl": "/items/tileset_1.png",
     "sellable": true,
-    "stackable": true
+    "stackable": true,
+    "use": {
+      "type": "heal",
+      "amount": 5,
+      "target": "ally"
+    }
   },
   {
     "id": "1754864425962",
@@ -78,7 +84,12 @@
     },
     "tilesetUrl": "/items/tileset_1.png",
     "sellable": true,
-    "stackable": true
+    "stackable": true,
+    "use": {
+      "type": "heal",
+      "amount": 20,
+      "target": "ally"
+    }
   },
   {
     "id": "1754878147635",
@@ -91,7 +102,15 @@
     },
     "tilesetUrl": "/items/tileset_1.png",
     "sellable": true,
-    "stackable": true
+    "stackable": true,
+    "equip": {
+      "bonuses": [
+        {
+          "stat": "str",
+          "delta": 2
+        }
+      ]
+    }
   },
   {
     "id": "1754878159603",
@@ -104,7 +123,15 @@
     },
     "tilesetUrl": "/items/tileset_1.png",
     "sellable": true,
-    "stackable": true
+    "stackable": true,
+    "equip": {
+      "bonuses": [
+        {
+          "stat": "str",
+          "delta": 5
+        }
+      ]
+    }
   },
   {
     "id": "1754878173083",
@@ -117,7 +144,15 @@
     },
     "tilesetUrl": "/items/tileset_1.png",
     "sellable": true,
-    "stackable": true
+    "stackable": true,
+    "equip": {
+      "bonuses": [
+        {
+          "stat": "str",
+          "delta": 8
+        }
+      ]
+    }
   },
   {
     "id": "1754879231663",
@@ -239,7 +274,7 @@
   {
     "id": "1754935730336",
     "name": "Cloth Armor",
-    "desc": "Blusa simples, só pra não ficar pelado.",
+    "desc": "Blusa simples, só pra não ficar pelado. Aumenta defesa em 1.",
     "price": 50,
     "category": "armor",
     "sprite": {
@@ -247,7 +282,8 @@
       "col": 0
     },
     "tilesetUrl": "/items/tileset_1.png",
-    "sellable": true
+    "sellable": true,
+    "equip": { "bonuses": [ { "stat": "defense", "delta": 1 } ] }
   },
   {
     "id": "1754938421501",
@@ -261,5 +297,20 @@
     },
     "tilesetUrl": "/items/tileset_1.png",
     "sellable": true
+  },
+  {
+    "id": "1754955449841",
+    "name": "Strength Potion",
+    "desc": "Adds 2 to STR for 2 days",
+    "price": 180,
+    "category": "potion",
+    "sprite": {
+      "row": 4,
+      "col": 12
+    },
+    "tilesetUrl": "/items/tileset_1.png",
+    "sellable": true,
+    "stackable": true,
+    "use": { "type": "buff", "stat": "str", "amount": 2, "durationDays": 2, "target": "ally" }
   }
 ]

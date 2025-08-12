@@ -22,7 +22,7 @@ export function Guild() {
         ) : (
           <div className="row g-4">
             {state.members.map(m => (
-              <div key={m.id} className="col-12 col-md-6 col-lg-4">
+              <div key={m.id} className="col-12 col-md-4 col-lg-3">
                 <div 
                   className="card h-100 shadow-sm border-0 clickable guild-card" 
                   onClick={() => setSelectedId(m.id)}
