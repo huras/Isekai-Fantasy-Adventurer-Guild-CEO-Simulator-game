@@ -110,7 +110,7 @@ export function Guild() {
                       </div>
                       <div className="w-100">
                         <ProgressBar 
-                          variant="hp" 
+                          variant="xp" 
                           value={getExperienceProgress(m) * 100} 
                           max={100} 
                           width="100%" 

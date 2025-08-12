@@ -7,6 +7,8 @@ export function Battle() {
   const b = state.battle
   const [selectedTarget, setSelectedTarget] = useState<{ side: 'ally' | 'enemy'; index: number } | null>(null)
   const [selectedItemId, setSelectedItemId] = useState<string>('')
+  const [showBattleLog, setShowBattleLog] = useState(false)
+  
   if (!b) {
     return (
       <div className="card">
@@ -96,15 +98,20 @@ export function Battle() {
                 if (!userMember) return
                 const target = selectedTarget?.side === 'enemy' ? b.enemies[selectedTarget.index] : b.allies[selectedTarget?.index || 0]
                 applyItemEffect(base, { state, source: 'member', user: userMember, target, battle: { allies: b.allies, enemies: b.enemies } })
+                
+                // Log item usage to event log
+                const targetName = selectedTarget?.side === 'enemy' ? `enemy ${target.name}` : `ally ${target.name}`
+                state.logs.events.unshift(`🧪 ${userMember.name} used ${base.name} on ${targetName}`)
+                
                 // consume 1 from that member
                 const inv = (userMember.items || []).filter(Boolean) as { id: string; qty?: number }[]
                 const slot = inv.find(i => i.id === selectedItemId)
                 if (slot) {
                   slot.qty = Math.max(0, (slot.qty || 1) - 1)
                   if (slot.qty <= 0) {
-                    userMember.items = (userMember.items || []).map(x => x?.id === selectedItemId ? undefined as any : x)
+                    userMember.items = (userMember.items || []).map((x: any) => x?.id === selectedItemId ? undefined as any : x)
                   } else {
-                    userMember.items = (userMember.items || []).map(x => x?.id === selectedItemId ? { id: selectedItemId, qty: slot.qty } : x)
+                    userMember.items = (userMember.items || []).map((x: any) => x?.id === selectedItemId ? { id: selectedItemId, qty: slot.qty } : x)
                   }
                 }
                 ;(useStore() as any).emit?.()
@@ -117,10 +124,21 @@ export function Battle() {
           </div>
         </div>
         {b.log.length > 0 && (
-          <div className="mt-3 small text-muted">
-            {b.log.slice(0, 6).map((line, i) => (
-              <div key={i}>• {line}</div>
-            ))}
+          <div className="mt-3">
+            <div 
+              className="text-primary text-decoration-underline" 
+              style={{ cursor: 'pointer' }}
+              onClick={() => setShowBattleLog(!showBattleLog)}
+            >
+              {showBattleLog ? '▼ Hide Battle Log' : `▶ Show Battle Log (${b.log.length} entries)`}
+            </div>
+            {showBattleLog && (
+              <div className="mt-2 small text-muted border rounded p-2 bg-light">
+                {b.log.map((line, i) => (
+                  <div key={i}>• {line}</div>
+                ))}
+              </div>
+            )}
           </div>
         )}
         {state.isGameOver && (

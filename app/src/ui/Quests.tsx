@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react'
 import { useStore } from '../core/store'
-import { assignMember, generateQuestList, runQuest, unassignMember } from '../core/quests'
+import { assignMember, generateQuestList, runQuest, unassignMember, calculateQuestExperience } from '../core/quests'
 import { AdventurerModal } from './AdventurerModal'
 import { ProgressBar } from './ProgressBar'
 
@@ -100,6 +100,7 @@ export function Quests() {
                       <div className="d-flex flex-wrap gap-1 mt-1 align-items-center">
                         <span className="badge text-bg-light border" title="Reward">💰 {q.reward}g</span>
                         <span className="badge text-bg-light border" title="Fame">⭐ +{q.fame}</span>
+                        <span className="badge text-bg-success border fw-bold" title={`Estimated experience reward (${q.diff} difficulty)`}>📚 ~{calculateQuestExperience(q)} EXP</span>
                         <span className="badge text-bg-light border" title="Trip duration">🗺️⏳ {q.daysRequired || 1}d</span>
                         {/* Trip visualization: dots for planned travel days (max 6 shown) */}
                         <span className="small text-muted ms-1" title={`Trip plan: ${q.daysRequired || 1} day(s)`}>
@@ -178,60 +179,19 @@ export function Quests() {
                   <div className="d-flex justify-content-between align-items-center">
                     <div>
                       <strong>{m.name}</strong>
-                      <span className={`ms-2 align-middle rank-badge rank-${m.rank || 'H'}`}>{m.rank || 'H'}</span>
-                      <div className="d-flex flex-wrap gap-1 mt-1 align-items-center">
-                        <span className="badge text-bg-light border" title="Ends on day">📅 D{m.endOnDay}</span>
-                        <span className="badge text-bg-light border" title="Party size">👥 {m.party.length}</span>
-                        {typeof m.battlesPlanned === 'number' && m.battlesPlanned > 0 ? (
-                          <span className="badge text-bg-light border" title="Combat waves">⚔️ {m.battlesCleared || 0}/{m.battlesPlanned}</span>
-                        ) : (
-                          <span className="badge text-bg-light border" title="Combat">⚔️ none</span>
-                        )}
-                        {/* Trip progress: elapsed vs total days */}
-                        {(() => {
-                          const total = Math.max(1, (m.endOnDay - m.dayStarted))
-                          const elapsed = Math.max(0, (state.day - m.dayStarted))
-                          const ratio = Math.max(0, Math.min(1, elapsed / total))
-                          const pct = Math.round(ratio * 100)
-                          const remaining = Math.max(0, total - elapsed)
-                          const barClass = ratio > 0.66 ? 'bg-danger' : ratio > 0.33 ? 'bg-warning' : 'bg-success'
-                          return (
-                            <div className="d-flex align-items-center gap-2 ms-1" title={`Trip: ${elapsed}/${total}d (left ${remaining}d)`}>
-                              <div className="progress" style={{ height: 6, width: 90 }}>
-                                <div className={`progress-bar ${barClass}`} role="progressbar" style={{ width: `${pct}%` }} aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100} />
-                              </div>
-                              <span className="small text-muted">🗺️⏳ {remaining}d left</span>
-                            </div>
-                          )
-                        })()}
+                      <div className="small text-muted">
+                        {m.party?.length || 0} members • Day {m.dayStarted} → {m.endOnDay} • {m.battlesCleared || 0}/{m.battlesPlanned || 0} battles cleared
                       </div>
-                      {(state.battle && state.battle.missionId === m.id) && (
-                        <span className="badge text-bg-warning ms-2">In battle</span>
-                      )}
+                    </div>
+                    <div className="text-end">
+                      <div className="small text-muted">Reward: {m.reward}g</div>
+                      <div className="small text-muted">Fame: +{m.fame}</div>
                     </div>
                   </div>
-                  <div className="mt-2 d-flex align-items-center flex-wrap gap-2">
-                    {m.party.map(p => (
-                      <div key={p.id} className={`d-inline-flex flex-column border rounded px-2 py-1 ${p.alive === false ? 'border-danger' : 'border-secondary'}`} onClick={() => setSelectedId(p.id)} style={{ cursor: 'pointer' }}>
-                        <div className="d-flex align-items-center gap-1">
-                          {p.avatar && <img src={p.avatar} width={16} height={16} style={{ objectFit: 'cover', borderRadius: 3 }} />}
-                          <span>{p.name}{p.alive === false ? ' ☠️' : ''}</span>
-                        </div>
-                        {p.alive !== false && (
-                          <div className="d-flex align-items-center gap-1 mt-1">
-                            <ProgressBar variant="hp" value={p.hp} max={p.hpMax} width={90} height={6} />
-                            {typeof p.mp === 'number' && typeof p.mpMax === 'number' && (
-                              <ProgressBar variant="mp" value={p.mp} max={p.mpMax} width={90} height={6} />
-                            )}
-                          </div>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                  {m.log.length > 0 && (
+                  {m.log && m.log.length > 0 && (
                     <div className="mt-2 small text-muted">
-                      {(m.log || []).slice(0, 3).map((line, idx) => (
-                        <div key={idx}>• {line}</div>
+                      {m.log.slice(-2).map((line, i) => (
+                        <div key={i}>• {line}</div>
                       ))}
                     </div>
                   )}
@@ -240,6 +200,34 @@ export function Quests() {
             </div>
           </div>
         )}
+        
+        {/* Experience System Info */}
+        <div className="mt-3 p-3 bg-light rounded-3 small">
+          <div className="fw-bold mb-2">📚 Experience System</div>
+          <div className="row g-2">
+            <div className="col-md-6">
+              <div className="fw-semibold">Quest Rewards:</div>
+              <ul className="mb-0 small">
+                <li><strong>Kill</strong> quests give the most EXP (combat-focused)</li>
+                <li><strong>Protect/Escort</strong> quests give high EXP (risky)</li>
+                <li><strong>Find/Deliver</strong> quests give moderate EXP (safer)</li>
+                <li>Higher difficulty = more EXP</li>
+              </ul>
+            </div>
+            <div className="col-md-6">
+              <div className="fw-semibold">Battle Rewards:</div>
+              <ul className="mb-0 small">
+                <li>Individual enemy kills: 8-40+ EXP</li>
+                <li>Defense actions: 3-20+ EXP</li>
+                <li>No wave completion bonuses</li>
+                <li>Experience is earned per monster defeated</li>
+              </ul>
+            </div>
+          </div>
+          <div className="mt-2 text-muted">
+            <small>Note: EXP values shown are estimates based on quest difficulty and job type. Actual battle rewards may vary due to random bonuses.</small>
+          </div>
+        </div>
       </div>
     </div>
     <AdventurerModal

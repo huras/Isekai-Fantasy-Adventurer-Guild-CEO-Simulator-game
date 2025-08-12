@@ -284,13 +284,24 @@ export function advanceMissionsOneDay(state: GameState) {
       // Award experience to party members
       for (const member of m.party) {
         if (member.alive !== false) {
-          // Base experience based on mission difficulty
-          const baseExp = Math.max(10, m.diff * 5)
+          // Enhanced base experience based on mission difficulty
+          const baseExp = Math.max(25, m.diff * 12)
           // Bonus for higher difficulty missions
-          const difficultyBonus = Math.floor(m.diff / 2) * 3
+          const difficultyBonus = Math.floor(m.diff / 2) * 8
+          // Job-specific bonuses
+          const jobBonus = (() => {
+            switch (m.job) {
+              case 'Kill': return Math.floor(m.diff * 3) // Combat quests give more EXP
+              case 'Escort': return Math.floor(m.diff * 2) // Escort missions are risky
+              case 'Protect': return Math.floor(m.diff * 2.5) // Protection requires skill
+              case 'Deliver': return Math.floor(m.diff * 1.5) // Delivery is straightforward
+              case 'Find': return Math.floor(m.diff * 1.8) // Finding requires exploration
+              default: return Math.floor(m.diff * 1.5)
+            }
+          })()
           // Random variation
-          const randomBonus = Math.floor(Math.random() * 10)
-          const totalExp = baseExp + difficultyBonus + randomBonus
+          const randomBonus = Math.floor(Math.random() * 20)
+          const totalExp = baseExp + difficultyBonus + jobBonus + randomBonus
           
           const result = addExperience(member, totalExp)
           if (result.leveledUp) {
@@ -334,6 +345,29 @@ export function advanceMissionsOneDay(state: GameState) {
       expiredOnDay: state.day
     })
   }
+}
+
+/**
+ * Calculate expected experience reward for a quest
+ */
+export function calculateQuestExperience(quest: Quest): number {
+  // Enhanced base experience based on mission difficulty
+  const baseExp = Math.max(25, quest.diff * 12)
+  // Bonus for higher difficulty missions
+  const difficultyBonus = Math.floor(quest.diff / 2) * 8
+  // Job-specific bonuses
+  const jobBonus = (() => {
+    switch (quest.job) {
+      case 'Kill': return Math.floor(quest.diff * 3) // Combat quests give more EXP
+      case 'Escort': return Math.floor(quest.diff * 2) // Escort missions are risky
+      case 'Protect': return Math.floor(quest.diff * 2.5) // Protection requires skill
+      case 'Deliver': return Math.floor(quest.diff * 1.5) // Delivery is straightforward
+      case 'Find': return Math.floor(quest.diff * 1.8) // Finding requires exploration
+      default: return Math.floor(quest.diff * 1.5)
+    }
+  })()
+  
+  return baseExp + difficultyBonus + jobBonus
 }
 
 

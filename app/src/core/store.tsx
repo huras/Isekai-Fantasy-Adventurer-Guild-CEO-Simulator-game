@@ -68,7 +68,138 @@ const defaultStore: { state: GameState; emit: () => void; actions: {
 
 const StoreContext = createContext(defaultStore)
 
-const STORAGE_KEY = 'guildSim_ts_v1'
+// Versioned save format
+type SaveEnvelopeV1 = { version: 1; savedAt: number; state: Partial<GameState> }
+const SAVE_LATEST_VERSION = 1 as const
+const STORAGE_KEY_NEW = 'guildSim.save.v1'
+// Legacy keys supported for migration/read-only load
+const STORAGE_KEYS_LEGACY = ['guildSim_ts_v1']
+
+function computeWeekFromDay(day: number): number {
+  return Math.floor((Math.max(1, day) - 1) / 7) + 1
+}
+
+function pickSavableState(state: GameState): Partial<GameState> {
+  // Only store gameplay-relevant fields. Derived/runtime fields are omitted.
+  const out: Partial<GameState> = {
+    day: state.day,
+    week: state.week,
+    money: state.money,
+    notoriety: state.notoriety,
+    // Sanitize members to avoid saving placeholder nulls in inventories
+    members: state.members.map((m: any) => {
+      const copy: any = { ...m }
+      if (Array.isArray(copy.items)) {
+        copy.items = copy.items.filter((it: any) => it && typeof it === 'object' && it.id)
+      }
+      return copy
+    }),
+    candidates: state.candidates,
+    quests: state.quests,
+    activeMissions: state.activeMissions,
+    inventory: state.inventory,
+    logs: state.logs,
+    modifiers: state.modifiers,
+    settings: state.settings,
+    archives: state.archives,
+    isGameOver: state.isGameOver ?? false,
+  }
+  // Ensure we do not accidentally include heavy/derived fields
+  ;(out as any).itemsCatalog = undefined
+  ;(out as any).shop = undefined
+  ;(out as any).itemsLoaded = undefined
+  ;(out as any).battle = undefined
+  return JSON.parse(JSON.stringify(out))
+}
+
+function serializeForSave(state: GameState): SaveEnvelopeV1 {
+  return { version: SAVE_LATEST_VERSION, savedAt: Date.now(), state: pickSavableState(state) }
+}
+
+function ensureArray<T>(val: unknown, fallback: T[]): T[] {
+  return Array.isArray(val) ? (val as T[]) : fallback
+}
+
+function hydrateLoadedState(input: unknown, previous: GameState): GameState {
+  // Accept both new envelope and legacy raw GameState
+  const raw = (() => {
+    if (!input || typeof input !== 'object') return null
+    const obj = input as any
+    if (typeof obj.version === 'number' && obj.state) return obj.state as Partial<GameState>
+    return obj as Partial<GameState>
+  })()
+  const base: GameState = { ...initialState }
+  const provided = raw || {}
+
+  const next: GameState = {
+    ...base,
+    day: typeof provided.day === 'number' ? provided.day : base.day,
+    // Week is recomputed to avoid stale mismatch
+    week: computeWeekFromDay(typeof provided.day === 'number' ? provided.day : base.day),
+    money: typeof provided.money === 'number' ? provided.money : base.money,
+    notoriety: typeof provided.notoriety === 'number' ? provided.notoriety : base.notoriety,
+    members: ensureArray(provided.members, []),
+    candidates: ensureArray(provided.candidates, []),
+    quests: ensureArray(provided.quests, []),
+    activeMissions: ensureArray(provided.activeMissions, []),
+    battle: null, // never hydrate into the middle of a battle to avoid mismatch
+    inventory: ensureArray(provided.inventory, []),
+    // Preserve catalog-related runtime data from previous session so we don't need to re-fetch
+    itemsCatalog: previous.itemsCatalog,
+    itemsLoaded: previous.itemsLoaded,
+    shop: previous.shop,
+    kitchen: {
+      foodStorage: ensureArray(provided.kitchen?.foodStorage, []),
+      waitingForBreakfast: ensureArray(provided.kitchen?.waitingForBreakfast, []),
+    },
+    logs: {
+      events: ensureArray(provided.logs?.events, []),
+      battle: ensureArray(provided.logs?.battle, []),
+    },
+    modifiers: {
+      upkeepDeltaPerMember: provided.modifiers?.upkeepDeltaPerMember ?? 0,
+      questSuccessBonus: provided.modifiers?.questSuccessBonus ?? 0,
+      recruitStatBonus: provided.modifiers?.recruitStatBonus ?? 0,
+      shopDiscount: provided.modifiers?.shopDiscount ?? undefined,
+    },
+    settings: { autoAssign: !!(provided.settings?.autoAssign) },
+    archives: {
+      quests: ensureArray(provided.archives?.quests, []),
+      candidates: ensureArray(provided.archives?.candidates, []),
+      fallen: ensureArray(provided.archives?.fallen, []),
+    },
+    isGameOver: !!provided.isGameOver && provided.isGameOver === true,
+  }
+
+  // Normalize member inventory stacks: qty and instanceIds presence
+  function makeIds(n: number): string[] {
+    const out: string[] = []
+    for (let i = 0; i < n; i++) out.push(`inst_${(crypto as any)?.randomUUID?.() || Math.random().toString(36).slice(2, 11)}`)
+    return out
+  }
+  for (const m of next.members) {
+    if (Array.isArray((m as any).items)) {
+      const raw: any[] = (m as any).items
+      const normalized: any[] = []
+      for (const it of raw) {
+        if (!it || typeof it !== 'object' || !(it as any).id) continue
+        const qty = Math.max(1, (it as any).qty || 1)
+        const ids: string[] = Array.isArray((it as any).instanceIds) ? [...(it as any).instanceIds] : []
+        if (ids.length < qty) ids.push(...makeIds(qty - ids.length))
+        if (ids.length > qty) ids.length = qty
+        normalized.push({ id: (it as any).id, qty, instanceIds: ids })
+      }
+      ;(m as any).items = normalized
+      // Prune equipped instance ids that no longer exist after normalization
+      if (Array.isArray((m as any).equippedInstanceIds)) {
+        const present = new Set<string>((((m as any).items || []) as any[]).flatMap((s: any) => s?.instanceIds || []))
+        ;(m as any).equippedInstanceIds = (m as any).equippedInstanceIds.filter((eid: string) => present.has(eid))
+      }
+    }
+  }
+
+  return next
+}
 
 export function StoreProvider({ children, initial }: { children: React.ReactNode; initial?: Partial<GameState> }) {
   const [state, dispatch] = useReducer(reducer, { ...initialState, ...(initial || {}) })
@@ -151,13 +282,16 @@ export function StoreProvider({ children, initial }: { children: React.ReactNode
         }
         for (const m of state.members) {
           if (Array.isArray(m.items)) {
-            m.items = m.items.map((it: any) => {
-              const qty = Math.max(1, it?.qty || 1)
-              const ids: string[] = Array.isArray(it?.instanceIds) ? [...it.instanceIds] : []
+            const normalized: any[] = []
+            for (const it of m.items) {
+              if (!it || typeof it !== 'object' || !(it as any).id) continue
+              const qty = Math.max(1, (it as any).qty || 1)
+              const ids: string[] = Array.isArray((it as any).instanceIds) ? [...(it as any).instanceIds] : []
               if (ids.length < qty) ids.push(...makeIds(qty - ids.length))
               if (ids.length > qty) ids.length = qty
-              return { id: it.id, qty, instanceIds: ids } as any
-            }) as any
+              normalized.push({ id: (it as any).id, qty, instanceIds: ids })
+            }
+            m.items = normalized as any
           }
         }
         console.log('[ItemsLoader] itemsLoaded set to true')
@@ -344,8 +478,35 @@ export function StoreProvider({ children, initial }: { children: React.ReactNode
       const dmg = Math.max(1, Math.floor((actor.power ?? 8) * (0.8 + Math.random() * 0.6)))
       target.hp = Math.max(0, target.hp - dmg)
       b.log.unshift(`${actor.name} hits ${target.name} for ${dmg}`)
+      
+      // Log attack to event log
+      state.logs.events.unshift(`⚔️ ${actor.name} attacks ${target.name} for ${dmg} damage`)
+      
+      // Award experience for defeating this specific enemy
+      if (target.hp <= 0) {
+        const member = state.members.find(m => m.id === actor.id)
+        if (member) {
+          // Individual enemy defeat experience
+          const enemyExp = Math.max(8, b.diff * 4)
+          // Bonus for being the one to land the killing blow
+          const killBonus = Math.floor(Math.random() * 8) + 5
+          const totalExp = enemyExp + killBonus
+          
+          const result = addExperience(member, totalExp)
+          if (result.leveledUp) {
+            b.log.unshift(`🎉 ${member.name} leveled up to Lv.${member.level}! (+${totalExp} EXP for defeating ${target.name})`)
+            state.logs.events.unshift(`🎉 ${member.name} leveled up to Lv.${member.level}! (+${totalExp} EXP for defeating ${target.name})`)
+          } else {
+            b.log.unshift(`⭐ ${member.name} gained ${totalExp} experience for defeating ${target.name}`)
+            state.logs.events.unshift(`⭐ ${member.name} gained ${totalExp} experience for defeating ${target.name}`)
+          }
+        }
+      }
+      
       if (b.enemies.every(e => e.hp <= 0)) {
         b.log.unshift('Enemies defeated!')
+        state.logs.events.unshift(`⚔️ Wave ${b.wave} cleared in ${b.questName}!`)
+        
         // Signal continue to next wave or finish
         this.battleContinue()
         dispatch({ type: 'emit' })
@@ -369,6 +530,21 @@ export function StoreProvider({ children, initial }: { children: React.ReactNode
       b.log.unshift(`${actor.name} braces for impact (defend).`)
       // Simple defend: small heal
       actor.hp = Math.min(actor.hpMax, actor.hp + 2)
+      
+      // Log defend action to event log
+      state.logs.events.unshift(`🛡️ ${actor.name} defends and recovers 2 HP`)
+      
+      // Award small experience for successful defense
+      const member = state.members.find(m => m.id === actor.id)
+      if (member) {
+        const defenseExp = Math.max(3, Math.floor(b.diff * 1.5))
+        const result = addExperience(member, defenseExp)
+        if (result.leveledUp) {
+          b.log.unshift(`🎉 ${member.name} leveled up to Lv.${member.level}! (+${defenseExp} EXP for tactical defense)`)
+          state.logs.events.unshift(`🎉 ${member.name} leveled up to Lv.${member.level}! (+${defenseExp} EXP for tactical defense)`)
+        }
+      }
+      
       b.turnIndex += 1
       if (b.turnIndex >= b.allies.length) { b.turnSide = 'enemy'; b.turnIndex = 0; this.battleEnemyTurn() }
       dispatch({ type: 'emit' })
@@ -425,6 +601,10 @@ export function StoreProvider({ children, initial }: { children: React.ReactNode
         const dmg = Math.max(1, Math.floor((actor.power ?? 7) * (0.8 + Math.random() * 0.6)))
         target.hp = Math.max(0, target.hp - dmg)
         b.log.unshift(`${actor.name} hits ${target.name} for ${dmg}`)
+        
+        // Log enemy attack to event log
+        state.logs.events.unshift(`👹 ${actor.name} attacks ${target.name} for ${dmg} damage`)
+        
         if (b.allies.every(a => a.hp <= 0)) {
           b.log.unshift('Your party has been defeated...')
           state.isGameOver = true
@@ -465,10 +645,11 @@ export function StoreProvider({ children, initial }: { children: React.ReactNode
         // Spawn next wave
         const next = createBattleFromMission(m, (b.wave || 1) + 1, m.battlesPlanned || (b.wavesTotal || 1))
         state.battle = next
-        state.logs.events.unshift('⚔️ A new wave approaches!')
+        state.logs.events.unshift(`⚔️ A new wave approaches!`)
       } else {
         // Clear battle and resume mission progression next day
-        state.logs.events.unshift('⚔️ Battle concluded. Quest combat cleared.')
+        state.logs.events.unshift(`⚔️ Battle concluded. Quest combat cleared.`)
+        
         // Ensure counters are consistent
         m.battlesCleared = m.battlesPlanned || m.battlesCleared || 0
         state.battle = null
@@ -481,22 +662,97 @@ export function StoreProvider({ children, initial }: { children: React.ReactNode
       dispatch({ type: 'emit' })
     },
     save() {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(state))
-      state.logs.events.unshift('Game saved')
-      dispatch({ type: 'emit' })
+      ;(async () => {
+        try {
+          const envelope = serializeForSave(state)
+          const json = JSON.stringify(envelope, null, 2)
+          const supportsFS = typeof (window as any).showSaveFilePicker === 'function'
+          if (supportsFS) {
+            const handle = await (window as any).showSaveFilePicker({
+              suggestedName: `guild_save_D${state.day}_W${state.week}.json`,
+              types: [
+                {
+                  description: 'Guild Save',
+                  accept: { 'application/json': ['.json'] },
+                },
+              ],
+            })
+            const writable = await handle.createWritable()
+            await writable.write(new Blob([json], { type: 'application/json' }))
+            await writable.close()
+          } else {
+            const blob = new Blob([json], { type: 'application/json' })
+            const url = URL.createObjectURL(blob)
+            const a = document.createElement('a')
+            a.href = url
+            a.download = `guild_save_D${state.day}_W${state.week}.json`
+            document.body.appendChild(a)
+            a.click()
+            document.body.removeChild(a)
+            URL.revokeObjectURL(url)
+          }
+          state.logs.events.unshift('💾 Save exported to file')
+        } catch (err) {
+          console.error('[Save] failed (file export):', err)
+          state.logs.events.unshift('⚠️ Save export failed')
+        }
+        dispatch({ type: 'emit' })
+      })()
     },
     load() {
-      const raw = localStorage.getItem(STORAGE_KEY)
-      if (!raw) return
-      try {
-        const data = JSON.parse(raw) as GameState
-        dispatch({ type: 'load', payload: data })
-      } catch {}
+      ;(async () => {
+        try {
+          let text: string | null = null
+          const supportsFS = typeof (window as any).showOpenFilePicker === 'function'
+          if (supportsFS) {
+            const handles = await (window as any).showOpenFilePicker({
+              multiple: false,
+              types: [
+                {
+                  description: 'Guild Save',
+                  accept: { 'application/json': ['.json'] },
+                },
+              ],
+            })
+            const handle = Array.isArray(handles) ? handles[0] : null
+            if (!handle) { state.logs.events.unshift('ℹ️ Load cancelled'); dispatch({ type: 'emit' }); return }
+            const file = await handle.getFile()
+            text = await file.text()
+          } else {
+            text = await new Promise<string | null>((resolve) => {
+              const input = document.createElement('input')
+              input.type = 'file'
+              input.accept = 'application/json,.json'
+              input.onchange = async () => {
+                const f = input.files && input.files[0]
+                if (!f) { resolve(null); return }
+                const reader = new FileReader()
+                reader.onload = () => resolve(String(reader.result || ''))
+                reader.onerror = () => resolve(null)
+                reader.readAsText(f)
+              }
+              // Must be appended in some browsers to trigger the dialog reliably
+              document.body.appendChild(input)
+              input.click()
+              // Clean up after a tick
+              setTimeout(() => { if (document.body.contains(input)) document.body.removeChild(input) }, 0)
+            })
+          }
+          if (!text) { state.logs.events.unshift('ℹ️ No file selected') ; dispatch({ type: 'emit' }); return }
+          const parsed = JSON.parse(text)
+          const hydrated = hydrateLoadedState(parsed, state)
+          hydrated.logs.events.unshift('📥 Game loaded from file')
+          dispatch({ type: 'load', payload: hydrated })
+        } catch (err) {
+          console.error('[Load] failed (file import):', err)
+          state.logs.events.unshift('⚠️ Load failed (invalid file)')
+          dispatch({ type: 'emit' })
+        }
+      })()
     },
     reset() {
-      localStorage.removeItem(STORAGE_KEY)
-      Object.assign(state, initialState)
-      dispatch({ type: 'emit' })
+      // User requested: reset = full page refresh
+      try { window.location.reload() } catch { /* noop */ }
     },
   }), [state])
 

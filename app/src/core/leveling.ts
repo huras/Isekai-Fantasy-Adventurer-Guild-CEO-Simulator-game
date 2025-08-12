@@ -25,6 +25,8 @@ export function getExperienceForNextLevel(member: Member): number {
  * Calculate experience required for current level
  */
 export function getExperienceForCurrentLevel(member: Member): number {
+  // Level 1 should start at 0 total EXP
+  if (member.level <= 1) return 0
   return EXPERIENCE_CURVES[member.experienceCurve](member.level)
 }
 

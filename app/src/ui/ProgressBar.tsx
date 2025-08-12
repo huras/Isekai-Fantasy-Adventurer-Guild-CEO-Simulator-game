@@ -1,6 +1,6 @@
 import React from 'react'
 
-export type StatVariant = 'hp' | 'mp'
+export type StatVariant = 'hp' | 'mp' | 'xp'
 
 export function ProgressBar({
   value,
@@ -24,7 +24,9 @@ export function ProgressBar({
   const pct = Math.round((safeVal / safeMax) * 100)
   const gradient = variant === 'hp'
     ? 'linear-gradient(90deg, #ef4444, #dc2626)'
-    : 'linear-gradient(90deg, #60a5fa, #22d3ee)'
+    : variant === 'mp'
+      ? 'linear-gradient(90deg, #60a5fa, #22d3ee)'
+      : 'linear-gradient(90deg, #f59e0b, #fbbf24)'
   const bg = 'rgba(0,0,0,0.15)'
 
   return (

@@ -40,7 +40,6 @@ function computePower(stats?: Stats, speed?: number): number | null {
 }
 
 export function AdventurerModal({ open, onClose, adventurer }: { open: boolean; onClose: () => void; adventurer: AdventurerLike }) {
-  if (!open) return null
   
   // Add CSS for dragging effects
   React.useEffect(() => {
@@ -331,7 +330,7 @@ export function AdventurerModal({ open, onClose, adventurer }: { open: boolean; 
   // Drag & drop handlers
   const dragFrom = useRef<number | null>(null)
   const dragFromGuild = useRef<{ id: string; count: number } | null>(null)
-  function onDragStart(idx: number) { 
+  function onDragStart(idx: number, e: React.DragEvent) { 
     dragFrom.current = idx
     // Set the drag image to show only the item being dragged
     const dragElement = document.querySelector(`[data-item-slot="${idx}"]`) as HTMLElement
@@ -347,9 +346,8 @@ export function AdventurerModal({ open, onClose, adventurer }: { open: boolean; 
       dragImage.style.transform = 'rotate(5deg)'
       document.body.appendChild(dragImage)
       
-      const event = window.event as DragEvent
-      if (event && event.dataTransfer) {
-        event.dataTransfer.setDragImage(dragImage, rect.width / 2, rect.height / 2)
+      if (e && e.dataTransfer) {
+        e.dataTransfer.setDragImage(dragImage, rect.width / 2, rect.height / 2)
       }
       
       // Remove the temporary drag image after a short delay
@@ -563,6 +561,8 @@ export function AdventurerModal({ open, onClose, adventurer }: { open: boolean; 
     const spd = (adventurer as any).speed ?? eff.speed
     return computePower(eff, spd)
   })()
+  // Defer rendering until after hooks to keep hook order stable across renders
+  if (!open) return null
   return (
     <div
       className="modal fade show"
@@ -571,32 +571,30 @@ export function AdventurerModal({ open, onClose, adventurer }: { open: boolean; 
       aria-modal="true"
       onMouseDown={(e) => { if (e.target === e.currentTarget) onClose() }}
     >
-      {unstackModal && (
-        <UnstackModal
-          open={!!unstackModal}
-          max={unstackModal.max}
-          amount={unstackModal.amount}
-          setAmount={(n) => setUnstackModal(prev => prev ? { ...prev, amount: Math.max(1, Math.min(prev.max, n)) } : prev)}
-          onClose={() => setUnstackModal(null)}
-          onConfirm={() => {
-            if (!memberRef || !unstackModal) return
-            const items = (memberRef.items = memberRef.items || []) as unknown as InventoryItem[]
-            while (items.length < 12) items.push(undefined as unknown as ShopItem)
-            const idx = unstackModal.slotIdx
-            const src = items[idx] as any
-            const move = Math.max(1, Math.min(unstackModal.amount, (src?.qty || 1) - 1))
-            // find next empty slot
-            let emptyIdx = -1
-            for (let i = 1; i < 12; i++) { const j = (idx + i) % 12; if (!items[j]) { emptyIdx = j; break } }
-            if (emptyIdx === -1 || move <= 0) { setUnstackModal(null); return }
-            const movedInst = (src.instanceIds || []).splice(0, move)
-            src.qty = (src.qty || 1) - move
-            items[emptyIdx] = { id: src.id, qty: move, instanceIds: movedInst }
-            emit()
-            setUnstackModal(null)
-          }}
-        />
-      )}
+      <UnstackModal
+        open={!!unstackModal}
+        max={unstackModal?.max ?? 1}
+        amount={unstackModal?.amount ?? 1}
+        setAmount={(n) => setUnstackModal(prev => prev ? { ...prev, amount: Math.max(1, Math.min(prev.max, n)) } : prev)}
+        onClose={() => setUnstackModal(null)}
+        onConfirm={() => {
+          if (!memberRef || !unstackModal) return
+          const items = (memberRef.items = memberRef.items || []) as unknown as InventoryItem[]
+          while (items.length < 12) items.push(undefined as unknown as ShopItem)
+          const idx = unstackModal.slotIdx
+          const src = items[idx] as any
+          const move = Math.max(1, Math.min(unstackModal.amount, (src?.qty || 1) - 1))
+          // find next empty slot
+          let emptyIdx = -1
+          for (let i = 1; i < 12; i++) { const j = (idx + i) % 12; if (!items[j]) { emptyIdx = j; break } }
+          if (emptyIdx === -1 || move <= 0) { setUnstackModal(null); return }
+          const movedInst = (src.instanceIds || []).splice(0, move)
+          src.qty = (src.qty || 1) - move
+          items[emptyIdx] = { id: src.id, qty: move, instanceIds: movedInst }
+          emit()
+          setUnstackModal(null)
+        }}
+      />
       <div className="modal-dialog modal-xl modal-dialog-centered">
         <div className="modal-content border-0 shadow-lg" style={{ borderRadius: '16px' }}>
           {/* Simple Header */}
@@ -957,7 +955,7 @@ export function AdventurerModal({ open, onClose, adventurer }: { open: boolean; 
                               </span>
                             </div>
                             <ProgressBar 
-                              variant="hp" 
+                              variant="xp" 
                               value={getExperienceProgress({ level: adventurer.level || 1, experience: adventurer.experience, experienceCurve: adventurer.experienceCurve } as any) * 100} 
                               max={100} 
                               width="100%" 
@@ -1047,7 +1045,7 @@ export function AdventurerModal({ open, onClose, adventurer }: { open: boolean; 
                                 }}
                                 title={cat?.name || ref.id}
                                 draggable={!!memberRef}
-                                onDragStart={() => onDragStart(idx)}
+                                onDragStart={(e) => onDragStart(idx, e)}
                                 onDragOver={onDragOver}
                                 onDrop={(e) => onDrop(e, idx)}
                                 onClick={(e) => {
