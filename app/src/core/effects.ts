@@ -89,12 +89,17 @@ export function applyItemEffect(item: ShopItem, ctx: ItemUseContext) {
         const member = ctx.user as Member | null
         const stat = use.stat || 'str'
         const amount = Math.max(0, Math.floor(use.amount ?? 0))
-        const duration = Math.max(1, Math.floor(use.durationDays ?? 1))
+        const rawDuration = Math.floor(use.durationDays ?? 1)
+        const isInfinite = rawDuration <= 0
+        const duration = isInfinite ? 0 : Math.max(1, rawDuration)
         if (member) {
           member.activeBuffs = member.activeBuffs || []
-          const buff: ActiveBuff = { stat, delta: amount, expiresOnDay: ctx.state.day + duration, sourceItemId: item.id }
+          const expiresOnDay = isInfinite ? Number.MAX_SAFE_INTEGER : (ctx.state.day + duration)
+          const buff: ActiveBuff = { stat, delta: amount, expiresOnDay, sourceItemId: item.id }
           member.activeBuffs.push(buff)
-          const text = `${member.name} gains +${amount} ${stat.toUpperCase()} for ${duration} day(s) from ${item.name}`
+          const text = isInfinite
+            ? `${member.name} gains +${amount} ${stat.toUpperCase()} indefinitely from ${item.name}`
+            : `${member.name} gains +${amount} ${stat.toUpperCase()} for ${duration} day(s) from ${item.name}`
           if (ctx.battle) {
             logBattle(ctx.state, text)
           } else {

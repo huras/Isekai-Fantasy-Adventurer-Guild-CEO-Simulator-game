@@ -396,14 +396,15 @@
     "tilesetUrl": "/items/tileset_1.png",
     "sellable": true,
     "equippable": true,
-    "use": [
-      {
-        "type": "buff",
-        "amount": 10,
-        "target": "ally",
-        "durationDays": 0
-      }
-    ]
+    "use": [],
+    "equip": {
+      "bonuses": [
+        {
+          "stat": "luck",
+          "delta": 15
+        }
+      ]
+    }
   },
   {
     "id": "1755037499741",
@@ -418,7 +419,15 @@
     "tilesetUrl": "/items/tileset_1.png",
     "sellable": true,
     "equippable": true,
-    "use": []
+    "use": [],
+    "equip": {
+      "bonuses": [
+        {
+          "stat": "str",
+          "delta": 4
+        }
+      ]
+    }
   },
   {
     "id": "balanced_blade",
@@ -488,5 +497,32 @@
       ]
     },
     "equippable": true
+  },
+  {
+    "id": "1755054752676",
+    "name": "Strength Potion 2",
+    "desc": "Potion to add 2 to str",
+    "price": 14,
+    "category": "food",
+    "sprite": {
+      "row": 4,
+      "col": 12
+    },
+    "tilesetUrl": "/items/tileset_1.png",
+    "sellable": true,
+    "equippable": false,
+    "use": [
+      {
+        "stat": "hp",
+        "delta": 10,
+        "target": "self",
+        "type": "buff",
+        "durationDays": 1,
+        "amount": 2
+      }
+    ],
+    "equip": {
+      "bonuses": []
+    }
   }
 ]

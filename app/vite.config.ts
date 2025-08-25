@@ -3,7 +3,7 @@ import react from '@vitejs/plugin-react'
 
 const globalAny: any = globalThis as any
 const preferredPort = Number(
-  globalAny?.process?.env?.PORT ?? globalAny?.process?.env?.VITE_PORT ?? 5174
+  globalAny?.process?.env?.PORT ?? globalAny?.process?.env?.VITE_PORT ?? 5179
 )
 
 export default defineConfig({

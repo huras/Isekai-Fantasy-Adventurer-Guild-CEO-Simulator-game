@@ -1,5 +1,5 @@
 import React, { useMemo, useRef, useState } from 'react'
-import type { ItemCategory, ShopItem, TilesetJSON } from '../core/types'
+import type { ItemCategoryId, ShopItem, TilesetJSON, UseDescriptor } from '../core/types'
 import { useStore } from '../core/store'
 import { getSpriteStyle, getSpriteStyleFromUrl } from '../core/items'
 
@@ -8,17 +8,13 @@ type DraftItem = {
   name: string
   desc?: string
   price: number
-  category: ItemCategory
+  category: ItemCategoryId
   sprite: { row: number; col: number }
   tilesetUrl: string
   sellable: boolean
   equippable?: boolean
   stackable?: boolean
-  use?: Array<{
-    stat: string
-    delta: number
-    target?: 'self' | 'guildmaster' | 'party'
-  }>
+  use?: UseDescriptor[]
   equip?: {
     bonuses: Array<{
       stat: string
@@ -90,7 +86,6 @@ export function Items() {
       tilesetUrl: draft.tilesetUrl,
       sellable: draft.sellable,
       equippable: draft.equippable,
-      stackable: draft.stackable,
       use: draft.use,
       equip: draft.equip,
       apply() { /* effect no-op for now */ },
@@ -116,7 +111,6 @@ export function Items() {
       tilesetUrl: draft.tilesetUrl,
       sellable: draft.sellable,
       equippable: draft.equippable,
-      stackable: draft.stackable,
       use: draft.use,
       equip: draft.equip,
       apply: state.itemsCatalog[idx].apply || (() => {}),
@@ -224,7 +218,7 @@ export function Items() {
   function addUseEffect() {
     setDraft(d => ({
       ...d,
-      use: [...(d.use || []), { stat: 'hp', delta: 10, target: 'self' }]
+      use: [...(d.use || []), { type: 'heal', amount: 10, target: 'self' }]
     }))
   }
 
@@ -235,11 +229,11 @@ export function Items() {
     }))
   }
 
-  function updateUseEffect(index: number, field: string, value: any) {
+  function updateUseEffect(index: number, field: keyof UseDescriptor, value: any) {
     setDraft(d => ({
       ...d,
       use: (d.use || []).map((effect, i) => 
-        i === index ? { ...effect, [field]: value } : effect
+        i === index ? { ...effect, [field]: value } as UseDescriptor : effect
       )
     }))
   }
@@ -363,7 +357,7 @@ export function Items() {
               </div>
               <div className="col-8">
                 <label className="form-label small">Category</label>
-                <select className="form-select" value={draft.category} onChange={e => setDraft(d => ({ ...d, category: e.target.value as ItemCategory }))}>
+                <select className="form-select" value={draft.category} onChange={e => setDraft(d => ({ ...d, category: e.target.value as ItemCategoryId }))}>
                   <option value="food">food</option>
                   <option value="potion">potion</option>
                   <option value="weapon">weapon</option>
@@ -419,43 +413,72 @@ export function Items() {
               {draft.use && draft.use.map((effect, index) => (
                 <div key={index} className="border rounded p-2 mb-2">
                   <div className="row g-2">
-                    <div className="col-4">
-                      <label className="form-label small">Stat</label>
+                    <div className="col-3">
+                      <label className="form-label small">Type</label>
                       <select 
                         className="form-select form-select-sm" 
-                        value={effect.stat} 
-                        onChange={e => updateUseEffect(index, 'stat', e.target.value)}
+                        value={effect.type}
+                        onChange={e => updateUseEffect(index, 'type', e.target.value as UseDescriptor['type'])}
                       >
-                        <option value="hp">HP</option>
-                        <option value="mp">MP</option>
-                        <option value="str">STR</option>
-                        <option value="mag">MAG</option>
-                        <option value="skill">SKILL</option>
-                        <option value="speed">SPEED</option>
-                        <option value="luck">LUCK</option>
-                        <option value="defense">DEFENSE</option>
-                        <option value="resistance">RESISTANCE</option>
+                        <option value="heal">Heal HP</option>
+                        <option value="heal_mp">Heal MP</option>
+                        <option value="damage">Damage</option>
+                        <option value="buff">Buff</option>
+                        <option value="cleanse">Cleanse</option>
                       </select>
                     </div>
-                    <div className="col-4">
-                      <label className="form-label small">Delta</label>
-                      <input 
-                        type="number" 
-                        className="form-control form-control-sm" 
-                        value={effect.delta} 
-                        onChange={e => updateUseEffect(index, 'delta', Number(e.target.value))} 
-                      />
-                    </div>
+                    {(effect.type === 'buff' || effect.type === 'cleanse') && (
+                      <div className="col-3">
+                        <label className="form-label small">Stat</label>
+                        <select 
+                          className="form-select form-select-sm" 
+                          value={effect.stat || 'str'} 
+                          onChange={e => updateUseEffect(index, 'stat', e.target.value as any)}
+                        >
+                          <option value="str">STR</option>
+                          <option value="mag">MAG</option>
+                          <option value="skill">SKILL</option>
+                          <option value="speed">SPEED</option>
+                          <option value="luck">LUCK</option>
+                          <option value="defense">DEFENSE</option>
+                          <option value="resistance">RESISTANCE</option>
+                        </select>
+                      </div>
+                    )}
+                    {(effect.type === 'heal' || effect.type === 'heal_mp' || effect.type === 'damage' || effect.type === 'buff') && (
+                      <div className="col-3">
+                        <label className="form-label small">Amount</label>
+                        <input 
+                          type="number" 
+                          className="form-control form-control-sm" 
+                          value={effect.amount ?? 0} 
+                          onChange={e => updateUseEffect(index, 'amount', Number(e.target.value))} 
+                        />
+                      </div>
+                    )}
+                    {effect.type === 'buff' && (
+                      <div className="col-3">
+                        <label className="form-label small">Duration (days)</label>
+                        <input 
+                          type="number" 
+                          className="form-control form-control-sm" 
+                          min={0}
+                          value={Math.max(0, effect.durationDays ?? 1)} 
+                          onChange={e => updateUseEffect(index, 'durationDays', Math.max(0, Number(e.target.value)))} 
+                        />
+                      </div>
+                    )}
                     <div className="col-3">
                       <label className="form-label small">Target</label>
                       <select 
                         className="form-select form-select-sm" 
-                        value={effect.target} 
-                        onChange={e => updateUseEffect(index, 'target', e.target.value)}
+                        value={effect.target || 'self'} 
+                        onChange={e => updateUseEffect(index, 'target', e.target.value as any)}
                       >
                         <option value="self">Self</option>
-                        <option value="guildmaster">Guildmaster</option>
-                        <option value="party">Party</option>
+                        <option value="ally">Ally</option>
+                        <option value="enemy">Enemy</option>
+                        <option value="any">Any</option>
                       </select>
                     </div>
                     <div className="col-1 d-flex align-items-end">

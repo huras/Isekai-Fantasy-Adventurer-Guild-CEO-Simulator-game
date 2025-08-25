@@ -26,6 +26,35 @@ const initialState: GameState = {
   archives: { quests: [], candidates: [], fallen: [] },
   modifiers: { upkeepDeltaPerMember: 0, questSuccessBonus: 0, recruitStatBonus: 0 },
   settings: { autoAssign: false },
+  // New tycoon mechanics
+  guildLevel: 1,
+  guildExp: 0,
+  guildExpToNext: 1000,
+  reputation: 10,
+  influence: 5,
+  facilities: [],
+  upgrades: [],
+  achievements: [],
+  questChains: [],
+  guildStats: {
+    totalQuestsCompleted: 0,
+    totalMoneyEarned: 0,
+    totalMembersRecruited: 0,
+    totalMembersLost: 0,
+    longestQuestChain: 0,
+    highestRankQuest: 'H',
+    daysSinceLastLoss: 0,
+    consecutiveSuccessfulQuests: 0
+  },
+  marketTrends: [],
+  events: [],
+  goals: [],
+  tutorial: {
+    currentStep: 1,
+    completedSteps: [],
+    isActive: true,
+    currentTip: "Welcome to your guild! Start by recruiting some adventurers."
+  }
 }
 
 type Action = { type: 'emit' | 'load'; payload?: GameState }
@@ -62,6 +91,35 @@ const defaultStore: { state: GameState; emit: () => void; actions: {
     archives: { quests: [], candidates: [], fallen: [] },
     modifiers: { upkeepDeltaPerMember: 0, questSuccessBonus: 0, recruitStatBonus: 0 },
     settings: { autoAssign: false },
+    // New tycoon mechanics
+    guildLevel: 1,
+    guildExp: 0,
+    guildExpToNext: 1000,
+    reputation: 10,
+    influence: 5,
+    facilities: [],
+    upgrades: [],
+    achievements: [],
+    questChains: [],
+    guildStats: {
+      totalQuestsCompleted: 0,
+      totalMoneyEarned: 0,
+      totalMembersRecruited: 0,
+      totalMembersLost: 0,
+      longestQuestChain: 0,
+      highestRankQuest: 'H',
+      daysSinceLastLoss: 0,
+      consecutiveSuccessfulQuests: 0
+    },
+    marketTrends: [],
+    events: [],
+    goals: [],
+    tutorial: {
+      currentStep: 1,
+      completedSteps: [],
+      isActive: true,
+      currentTip: "Welcome to your guild! Start by recruiting some adventurers."
+    }
   },
   emit: () => {},
   actions: { nextDay: () => {}, save: () => {}, load: () => {}, reset: () => {}, serveBreakfast: () => {}, battleAttack: () => {}, battleDefend: () => {}, battleUseItem: () => {}, battleEnemyTurn: () => {}, battleContinue: () => {} },
@@ -103,7 +161,6 @@ function pickSavableState(state: GameState): Partial<GameState> {
     modifiers: state.modifiers,
     settings: state.settings,
     archives: state.archives,
-    isGameOver: state.isGameOver ?? false,
   }
   // Ensure we do not accidentally include heavy/derived fields
   ;(out as any).itemsCatalog = undefined

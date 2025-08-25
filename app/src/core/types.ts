@@ -15,6 +15,90 @@ export type DifficultyRank = 'H' | 'G' | 'F' | 'E' | 'D' | 'C' | 'B' | 'A' | 'S'
 export type JobKind = 'Find' | 'Deliver' | 'Escort' | 'Protect' | 'Kill'
 export type TargetKind = 'Person' | 'Monster' | 'Item' | 'Location'
 
+// New types for tycoon mechanics
+export type GuildFacility = {
+  id: string;
+  name: string;
+  description: string;
+  level: number;
+  maxLevel: number;
+  baseCost: number;
+  upgradeCost: number;
+  effects: FacilityEffect[];
+  isBuilt: boolean;
+  maintenanceCost: number;
+}
+
+export type FacilityEffect = {
+  type: 'upkeep_reduction' | 'quest_success_bonus' | 'recruit_bonus' | 'training_bonus' | 'income_bonus';
+  value: number;
+  description: string;
+}
+
+export type GuildUpgrade = {
+  id: string;
+  name: string;
+  description: string;
+  cost: number;
+  isPurchased: boolean;
+  effects: FacilityEffect[];
+  requirements: UpgradeRequirement[];
+}
+
+export type UpgradeRequirement = {
+  type: 'facility_level' | 'member_count' | 'notoriety' | 'money' | 'quests_completed';
+  value: number;
+  target?: string; // For facility_level requirements
+}
+
+export type Achievement = {
+  id: string;
+  name: string;
+  description: string;
+  isUnlocked: boolean;
+  unlockedAt?: number;
+  reward?: AchievementReward;
+  progress: number;
+  maxProgress: number;
+}
+
+export type AchievementReward = {
+  type: 'money' | 'notoriety' | 'item' | 'facility_unlock';
+  value: number;
+  itemId?: string;
+  facilityId?: string;
+}
+
+export type QuestChain = {
+  id: string;
+  name: string;
+  description: string;
+  currentStep: number;
+  totalSteps: number;
+  quests: string[]; // Quest IDs in order
+  rewards: QuestChainReward;
+  isCompleted: boolean;
+  startedAt: number;
+}
+
+export type QuestChainReward = {
+  money: number;
+  notoriety: number;
+  items: string[];
+  facilityUnlock?: string;
+}
+
+export type GuildStats = {
+  totalQuestsCompleted: number;
+  totalMoneyEarned: number;
+  totalMembersRecruited: number;
+  totalMembersLost: number;
+  longestQuestChain: number;
+  highestRankQuest: DifficultyRank;
+  daysSinceLastLoss: number;
+  consecutiveSuccessfulQuests: number;
+}
+
 export type BattleActor = {
   id: string;
   name: string;
@@ -72,7 +156,16 @@ export type Member = {
   skillLevels?: Record<string, number>;
   skillExp?: Record<string, number>;
   alive?: boolean;
-};
+  // New tycoon mechanics
+  loyalty: number; // 0-100, affects performance and chance to leave
+  trainingLevel: number; // 0-5, affects quest success rate
+  lastTrainingDay?: number;
+  questsCompleted: number;
+  questsFailed: number;
+  totalEarnings: number;
+  isRetired?: boolean;
+  retirementDay?: number;
+}
 
 export type Candidate = {
   id: string;
@@ -89,6 +182,12 @@ export type Candidate = {
   expiresOnWeek: number;
   // Temporary: starter inventory for preview/acceptance
   starterItems?: InventoryItem[];
+  // New tycoon mechanics
+  potential: number; // 1-10, affects growth rate
+  loyalty: number; // 0-100, affects chance to accept offer
+  askingSalary: number; // Negotiable salary
+  experience: number; // Years of experience
+  reputation: number; // 0-100, affects quest success
 };
 
 export type Quest = {
@@ -101,105 +200,135 @@ export type Quest = {
   fame: number;
   day: number;
   expiresOnDay: number;
-  daysRequired?: number;
-  type?: 'Beginner' | 'Combat' | 'Exploration' | 'Magic' | 'Political' | 'Legendary' | 'Comedic';
-  tags?: string[];
-  emoji?: string;
-  job?: JobKind;
-  target?: TargetKind;
   assigned?: Member[];
+  tags?: string[];
+  job: JobKind;
+  target: TargetKind;
+  daysRequired: number;
+  // New tycoon mechanics
+  chainId?: string; // If part of a quest chain
+  chainStep?: number; // Step in the chain
+  difficulty: number; // 1-20 scale
+  riskLevel: 'low' | 'medium' | 'high' | 'extreme';
+  specialRewards?: SpecialReward[];
+  requirements?: QuestRequirement[];
+  isEpic?: boolean; // Special high-value quests
+  epicReward?: EpicReward;
 };
 
-export type ExpiredQuest = {
+export type SpecialReward = {
+  type: 'item' | 'facility' | 'upgrade' | 'member';
+  itemId?: string;
+  facilityId?: string;
+  upgradeId?: string;
+  memberId?: string;
+  description: string;
+}
+
+export type QuestRequirement = {
+  type: 'member_count' | 'member_level' | 'facility_level' | 'guild_level';
+  value: number;
+  description: string;
+}
+
+export type EpicReward = {
+  money: number;
+  notoriety: number;
+  items: string[];
+  facilityUnlock?: string;
+  title?: string;
+}
+
+export type ActiveMission = {
+  id: string;
+  questId: string;
+  questName: string;
+  party: Member[];
+  dayStarted: number;
+  endOnDay: number;
+  battlesPlanned: number;
+  battlesCleared: number;
+  reward: number;
+  fame: number;
+  log: string[];
+  // New tycoon mechanics
+  successChance: number; // 0-100, calculated from party stats and quest difficulty
+  riskAssessment: 'low' | 'medium' | 'high' | 'extreme';
+  estimatedProfit: number;
+  actualProfit?: number;
+  isCompleted?: boolean;
+  completionDay?: number;
+  failureReason?: string;
+};
+
+export type InventoryItem = {
   id: string;
   name: string;
-  expiredOnDay: number;
+  description: string;
+  category: string;
+  rarity: 'common' | 'uncommon' | 'rare' | 'epic' | 'legendary';
+  value: number;
+  stackable: boolean;
+  quantity: number;
+  maxQuantity: number;
+  // New tycoon mechanics
+  durability?: number;
+  maxDurability?: number;
+  enchantments?: Enchantment[];
+  isEquipped?: boolean;
+  equippedBy?: string; // Member ID
+  slot?: 'weapon' | 'armor' | 'accessory' | 'consumable';
+  stats?: Partial<Stats>;
+  effects?: ItemEffect[];
 };
 
-export type ExpiredCandidate = {
+export type Enchantment = {
+  type: string;
+  value: number;
+  description: string;
+}
+
+export type ItemEffect = {
+  type: 'stat_boost' | 'skill_boost' | 'special_ability';
+  target: string;
+  value: number;
+  duration?: number; // In days
+  description: string;
+}
+
+export type ActiveBuff = {
   id: string;
   name: string;
-  class: string;
-  expiredOnWeek: number;
-  weekAppeared?: number;
-  gender?: 'male' | 'female';
-  appearance?: string;
-  avatar?: string | null;
-  stats?: Stats;
-  upkeep?: number;
-  personality?: string;
+  description: string;
+  type: 'stat_boost' | 'skill_boost' | 'special_ability';
+  target: string;
+  value: number;
+  expiresAt: number;
+  source: 'item' | 'facility' | 'training' | 'quest';
 };
-
-export type ItemCategoryId = 'food' | 'potion' | 'weapon' | 'armor' | 'accessory' | 'skill' | 'material' | 'tool' | 'misc'
 
 export type ShopItem = {
   id: string;
   name: string;
-  desc?: string;
-  price: number;
-  category: ItemCategoryId;
-  sprite: { row: number; col: number };
-  // Optional: items crafted from custom tilesets can carry their image URL
-  tilesetUrl?: string;
-  // Optional: flag to mark whether the item should appear in the store
-  sellable?: boolean;
-  // Optional: flag to mark whether the item can be equipped
-  equippable?: boolean;
-  // Optional: stack quantity (defaults to 1 if omitted)
-  qty?: number;
-  // High-level usage descriptor(s) consumed by the effects engine
-  use?: UseDescriptor | UseDescriptor[];
-  // Optional: equipment bonuses when equipped
-  equip?: { bonuses: { stat: string; delta: number }[] };
-  apply(state: GameState): void;
+  description: string;
+  category: string;
+  rarity: 'common' | 'uncommon' | 'rare' | 'epic' | 'legendary';
+  basePrice: number;
+  currentPrice: number;
+  stock: number;
+  maxStock: number;
+  // New tycoon mechanics
+  demand: number; // 0-100, affects price fluctuations
+  supply: number; // 0-100, affects availability
+  priceHistory: PricePoint[];
+  isLimited?: boolean; // Limited time availability
+  expiresAt?: number;
+  bulkDiscount?: number; // Percentage discount for buying multiple
 };
 
-export type InventoryItem = {
-  id: string; // references ShopItem.id in itemsCatalog
-  qty?: number; // stack size; defaults to 1
-  instanceIds?: string[]; // unique instance ids contained in this stack
-  // future dynamic fields (durability, enchantments, bound flags, etc.) can live here
-}
-
-export type ActiveBuff = {
-  stat: 'str' | 'mag' | 'skill' | 'speed' | 'luck' | 'defense' | 'resistance';
-  delta: number;
-  expiresOnDay: number;
-  sourceItemId?: string;
-}
-
-// High-level item usage descriptor used by the effects system.
-// Compose multiple descriptors in an array to build complex effects.
-export type UseDescriptor = {
-  type: 'heal' | 'heal_mp' | 'damage' | 'buff' | 'cleanse';
-  amount?: number; // heal/damage/buff amount
-  target?: 'self' | 'ally' | 'enemy' | 'any'; // selection UI decides who exactly
-  stat?: 'str' | 'mag' | 'skill' | 'speed' | 'luck' | 'defense' | 'resistance'; // for buff/cleanse
-  durationDays?: number; // for buff
-}
-
-// Tileset JSON format (as generated by scripts/generate-tileset-json.js)
-export type TilesetSprite = {
-  id: string;
-  row: number;
-  col: number;
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-  backgroundImage: string; // e.g. url(/items/tileset_1.png)
-  backgroundPosition: string; // e.g. -1px -1px
-  backgroundRepeat: 'no-repeat';
-  imageRendering: 'pixelated';
-}
-
-export type TilesetJSON = {
-  tileset: string; // basename
-  imagePath: string; // public URL (e.g. /items/tileset_1.png)
-  constants: { TILE_SIZE: number; OFFSET: { x: number; y: number }; PADDING: { x: number; y: number } };
-  image: { width: number; height: number };
-  grid: { cols: number; rows: number };
-  sprites: TilesetSprite[];
+export type PricePoint = {
+  day: number;
+  price: number;
 }
 
 export type GameState = {
@@ -211,59 +340,97 @@ export type GameState = {
   candidates: Candidate[];
   quests: Quest[];
   activeMissions: ActiveMission[];
-  battle?: BattleState | null;
-  inventory: ShopItem[];
-  shop: ShopItem[]; // derived from itemsCatalog where sellable === true
-  itemsCatalog: ShopItem[]; // global registry of all game items
-  itemsLoaded?: boolean; // whether the initial catalog load was attempted
-  kitchen?: {
-    foodStorage: ShopItem[]; // only category === 'food'
-    waitingForBreakfast: string[]; // member ids
-  };
+  inventory: InventoryItem[];
+  shop: ShopItem[];
+  itemsCatalog: InventoryItem[];
+  itemsLoaded: boolean;
+  kitchen: { foodStorage: InventoryItem[]; waitingForBreakfast: Member[] };
   logs: { events: string[]; battle: string[] };
-  modifiers: {
-    upkeepDeltaPerMember: number;
-    questSuccessBonus: number; // percentage points
-    recruitStatBonus: number;
-    shopDiscount?: number;
-  };
+  archives: { quests: Quest[]; candidates: Candidate[]; fallen: Member[] };
+  modifiers: { upkeepDeltaPerMember: number; questSuccessBonus: number; recruitStatBonus: number };
   settings: { autoAssign: boolean };
-  archives: {
-    quests: ExpiredQuest[];
-    candidates: ExpiredCandidate[];
-    fallen: FallenRecord[];
-  };
-  isGameOver?: boolean;
+  // New tycoon mechanics
+  guildLevel: number;
+  guildExp: number;
+  guildExpToNext: number;
+  facilities: GuildFacility[];
+  upgrades: GuildUpgrade[];
+  achievements: Achievement[];
+  questChains: QuestChain[];
+  guildStats: GuildStats;
+  reputation: number; // 0-100, affects quest availability and rewards
+  influence: number; // 0-100, affects political power and special quests
+  marketTrends: MarketTrend[];
+  events: GameEvent[];
+  goals: GameGoal[];
+  tutorial: TutorialState;
 };
 
-export type ActiveMission = {
-  id: string; // links to the quest id
-  name: string;
-  diff: number;
-  rank?: DifficultyRank;
-  reward: number;
-  fame: number;
-  type?: Quest['type'];
-  tags?: string[];
-  emoji?: string;
-  job?: JobKind;
-  target?: TargetKind;
-  battlesPlanned?: number; // total waves planned for this mission
-  battlesRemaining?: number; // waves remaining to fight in this mission
-  battlesCleared?: number; // waves cleared so far
-  dayStarted: number;
-  endOnDay: number;
-  party: Member[];
-  log: string[];
-};
+export type MarketTrend = {
+  category: string;
+  trend: 'rising' | 'falling' | 'stable';
+  change: number; // Percentage change
+  duration: number; // Days this trend will last
+  description: string;
+}
 
-export type FallenRecord = {
+export type GameEvent = {
   id: string;
   name: string;
-  class: string;
-  diedOnDay: number;
-  cause: string;
-  level?: number;
-};
+  description: string;
+  type: 'opportunity' | 'challenge' | 'disaster' | 'windfall';
+  effects: EventEffect[];
+  duration: number; // Days the event lasts
+  startDay: number;
+  requirements?: EventRequirement[];
+  choices?: EventChoice[];
+}
+
+export type EventEffect = {
+  type: 'money' | 'notoriety' | 'reputation' | 'influence' | 'member_morale';
+  value: number;
+  description: string;
+}
+
+export type EventRequirement = {
+  type: 'facility_level' | 'member_count' | 'money' | 'reputation';
+  value: number;
+}
+
+export type EventChoice = {
+  id: string;
+  text: string;
+  effects: EventEffect[];
+  requirements?: EventRequirement[];
+  consequences: string;
+}
+
+export type GameGoal = {
+  id: string;
+  name: string;
+  description: string;
+  type: 'short_term' | 'medium_term' | 'long_term';
+  target: number;
+  current: number;
+  reward: GoalReward;
+  isCompleted: boolean;
+  deadline?: number;
+}
+
+export type GoalReward = {
+  money: number;
+  notoriety: number;
+  reputation: number;
+  influence: number;
+  items: string[];
+  facilityUnlock?: string;
+}
+
+export type TutorialState = {
+  currentStep: number;
+  completedSteps: string[];
+  isActive: boolean;
+  currentTip?: string;
+}
 
 
