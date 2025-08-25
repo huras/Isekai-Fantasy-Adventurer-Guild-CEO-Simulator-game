@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { useStore } from '../core/store'
 import { applyItemEffect } from '../core/effects'
+import { logEvent } from '../core/logs'
 
 export function Battle() {
   const { state, actions } = useStore()
@@ -101,7 +102,7 @@ export function Battle() {
                 
                 // Log item usage to event log
                 const targetName = selectedTarget?.side === 'enemy' ? `enemy ${target.name}` : `ally ${target.name}`
-                state.logs.events.unshift(`🧪 ${userMember.name} used ${base.name} on ${targetName}`)
+                logEvent(state, `🧪 ${userMember.name} used ${base.name} on ${targetName}`)
                 
                 // consume 1 from that member
                 const inv = (userMember.items || []).filter(Boolean) as { id: string; qty?: number }[]

@@ -45,11 +45,11 @@ export function Tabs({ tabs }: { tabs: Tab[] }) {
               <a
                 key={t.key}
                 href={`#${t.key}`}
-                className={`list-group-item list-group-item-action${active === t.key ? ' active' : ''} ${t.highlight ? 'list-group-item-warning' : ''} ${inBattle && t.key !== 'battle' ? 'disabled' : ''}`}
-                aria-disabled={inBattle && t.key !== 'battle'}
+                className={`list-group-item list-group-item-action${active === t.key ? ' active' : ''} ${t.highlight ? 'list-group-item-warning' : ''} ${inBattle ? 'disabled' : ''}`}
+                aria-disabled={inBattle}
                 onClick={e => {
                   e.preventDefault()
-                  if (inBattle && t.key !== 'battle') return
+                  if (inBattle) return
                   setActive(t.key)
                 }}
               >
@@ -59,7 +59,7 @@ export function Tabs({ tabs }: { tabs: Tab[] }) {
           </div>
         </div>
         <div className="col-12 col-lg-9">
-          {tabs.map(t => active === t.key && <div key={t.key}>{t.render()}</div>)}
+          {tabs.map(t => active === t.key && <div key={t.key} aria-hidden={inBattle}>{t.render()}</div>)}
         </div>
       </div>
     </div>

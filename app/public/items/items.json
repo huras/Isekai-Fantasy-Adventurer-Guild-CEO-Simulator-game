@@ -11,7 +11,18 @@
     },
     "tilesetUrl": "/items/tileset_1.png",
     "sellable": true,
-    "stackable": true
+    "equippable": false,
+    "stackable": true,
+    "use": [
+      {
+        "stat": "hp",
+        "delta": 10,
+        "target": "self"
+      }
+    ],
+    "equip": {
+      "bonuses": []
+    }
   },
   {
     "id": "1754849867652",
@@ -25,6 +36,7 @@
     },
     "tilesetUrl": "/items/tileset_1.png",
     "sellable": true,
+    "equippable": false,
     "stackable": true
   },
   {
@@ -39,6 +51,7 @@
     },
     "tilesetUrl": "/items/tileset_1.png",
     "sellable": true,
+    "equippable": false,
     "stackable": true,
     "use": {
       "type": "heal",
@@ -57,6 +70,7 @@
     },
     "tilesetUrl": "/items/tileset_1.png",
     "sellable": true,
+    "equippable": false,
     "stackable": true
   },
   {
@@ -70,6 +84,7 @@
     },
     "tilesetUrl": "/items/tileset_1.png",
     "sellable": true,
+    "equippable": false,
     "stackable": true
   },
   {
@@ -84,6 +99,7 @@
     },
     "tilesetUrl": "/items/tileset_1.png",
     "sellable": true,
+    "equippable": false,
     "stackable": true,
     "use": {
       "type": "heal",
@@ -102,6 +118,7 @@
     },
     "tilesetUrl": "/items/tileset_1.png",
     "sellable": true,
+    "equippable": true,
     "stackable": true,
     "equip": {
       "bonuses": [
@@ -123,6 +140,7 @@
     },
     "tilesetUrl": "/items/tileset_1.png",
     "sellable": true,
+    "equippable": true,
     "stackable": true,
     "equip": {
       "bonuses": [
@@ -144,6 +162,7 @@
     },
     "tilesetUrl": "/items/tileset_1.png",
     "sellable": true,
+    "equippable": true,
     "stackable": true,
     "equip": {
       "bonuses": [
@@ -165,6 +184,7 @@
     },
     "tilesetUrl": "/items/tileset_1.png",
     "sellable": true,
+    "equippable": false,
     "stackable": true
   },
   {
@@ -178,7 +198,8 @@
       "col": 4
     },
     "tilesetUrl": "/items/tileset_1.png",
-    "sellable": true
+    "sellable": true,
+    "equippable": false
   },
   {
     "id": "1754886769579",
@@ -191,7 +212,8 @@
       "col": 5
     },
     "tilesetUrl": "/items/tileset_1.png",
-    "sellable": true
+    "sellable": true,
+    "equippable": false
   },
   {
     "id": "1754886790467",
@@ -204,11 +226,12 @@
       "col": 6
     },
     "tilesetUrl": "/items/tileset_1.png",
-    "sellable": true
+    "sellable": true,
+    "equippable": false
   },
   {
     "id": "1754886805715",
-    "name": "Melacia",
+    "name": "Melancia",
     "desc": "Yummy!",
     "price": 11,
     "category": "food",
@@ -217,11 +240,12 @@
       "col": 7
     },
     "tilesetUrl": "/items/tileset_1.png",
-    "sellable": true
+    "sellable": true,
+    "equippable": false
   },
   {
     "id": "1754886818843",
-    "name": "Stawberry",
+    "name": "Morango",
     "desc": "Dá um bom milkshake! Cuidado pra não comprar o errado!",
     "price": 30,
     "category": "food",
@@ -230,7 +254,8 @@
       "col": 8
     },
     "tilesetUrl": "/items/tileset_1.png",
-    "sellable": true
+    "sellable": true,
+    "equippable": false
   },
   {
     "id": "1754887474680",
@@ -243,7 +268,8 @@
       "col": 9
     },
     "tilesetUrl": "/items/tileset_1.png",
-    "sellable": true
+    "sellable": true,
+    "equippable": false
   },
   {
     "id": "1754887484840",
@@ -256,7 +282,8 @@
       "col": 10
     },
     "tilesetUrl": "/items/tileset_1.png",
-    "sellable": true
+    "sellable": true,
+    "equippable": false
   },
   {
     "id": "1754887524880",
@@ -269,7 +296,8 @@
       "col": 1
     },
     "tilesetUrl": "/items/tileset_1.png",
-    "sellable": true
+    "sellable": true,
+    "equippable": false
   },
   {
     "id": "1754935730336",
@@ -283,7 +311,15 @@
     },
     "tilesetUrl": "/items/tileset_1.png",
     "sellable": true,
-    "equip": { "bonuses": [ { "stat": "defense", "delta": 1 } ] }
+    "equippable": true,
+    "equip": {
+      "bonuses": [
+        {
+          "stat": "defense",
+          "delta": 1
+        }
+      ]
+    }
   },
   {
     "id": "1754938421501",
@@ -296,7 +332,8 @@
       "col": 9
     },
     "tilesetUrl": "/items/tileset_1.png",
-    "sellable": true
+    "sellable": true,
+    "equippable": false
   },
   {
     "id": "1754955449841",
@@ -310,7 +347,146 @@
     },
     "tilesetUrl": "/items/tileset_1.png",
     "sellable": true,
+    "equippable": false,
     "stackable": true,
-    "use": { "type": "buff", "stat": "str", "amount": 2, "durationDays": 2, "target": "ally" }
+    "use": {
+      "type": "buff",
+      "stat": "str",
+      "amount": 2,
+      "durationDays": 2,
+      "target": "ally"
+    }
+  },
+  {
+    "id": "1755032799919",
+    "name": "Golden Armor",
+    "desc": "+20 Def",
+    "price": 50000,
+    "category": "armor",
+    "sprite": {
+      "row": 13,
+      "col": 5
+    },
+    "tilesetUrl": "/items/tileset_1.png",
+    "sellable": true
+  },
+  {
+    "id": "1755036546728",
+    "name": "Wooden Shield",
+    "desc": "+1 def",
+    "price": 25,
+    "category": "armor",
+    "sprite": {
+      "row": 12,
+      "col": 2
+    },
+    "tilesetUrl": "/items/tileset_1.png",
+    "sellable": true
+  },
+  {
+    "id": "1755037398669",
+    "name": "Saint Cross",
+    "desc": "+15 Luck",
+    "price": 250,
+    "category": "accessory",
+    "sprite": {
+      "row": 19,
+      "col": 11
+    },
+    "tilesetUrl": "/items/tileset_1.png",
+    "sellable": true,
+    "equippable": true,
+    "use": [
+      {
+        "type": "buff",
+        "amount": 10,
+        "target": "ally",
+        "durationDays": 0
+      }
+    ]
+  },
+  {
+    "id": "1755037499741",
+    "name": "Oak Staff",
+    "desc": "+3 MAG",
+    "price": 180,
+    "category": "weapon",
+    "sprite": {
+      "row": 8,
+      "col": 0
+    },
+    "tilesetUrl": "/items/tileset_1.png",
+    "sellable": true,
+    "equippable": true,
+    "use": []
+  },
+  {
+    "id": "balanced_blade",
+    "name": "Balanced Blade",
+    "desc": "+2 STR, +2 DEF",
+    "price": 320,
+    "category": "weapon",
+    "sprite": {
+      "row": 5,
+      "col": 3
+    },
+    "tilesetUrl": "/items/tileset_1.png",
+    "sellable": true,
+    "equippable": true,
+    "stackable": false,
+    "equip": {
+      "bonuses": [
+        {
+          "stat": "str",
+          "delta": 2
+        },
+        {
+          "stat": "defense",
+          "delta": 2
+        }
+      ]
+    }
+  },
+  {
+    "id": "1755037512461",
+    "name": "Iron Sword",
+    "desc": "+3 STR",
+    "price": 120,
+    "category": "weapon",
+    "sprite": {
+      "row": 5,
+      "col": 10
+    },
+    "tilesetUrl": "/items/tileset_1.png",
+    "sellable": true,
+    "equippable": true,
+    "use": []
+  },
+  {
+    "id": "1755037566949",
+    "name": "Hero Blade",
+    "desc": "The strongest sword +100 STR, +25 DEF",
+    "price": 1000000,
+    "category": "weapon",
+    "sprite": {
+      "row": 5,
+      "col": 4
+    },
+    "tilesetUrl": "/items/tileset_1.png",
+    "sellable": true,
+    "use": [],
+    "equip": {
+      "bonuses": [
+        {
+          "stat": "str",
+          "delta": 100
+        },
+        {
+          "stat": "defense",
+          "delta": 25
+        }
+      ]
+    },
+    "equippable": true
   }
 ]

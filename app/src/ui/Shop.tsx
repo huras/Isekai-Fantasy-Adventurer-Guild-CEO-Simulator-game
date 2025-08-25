@@ -3,6 +3,7 @@ import { useStore } from '../core/store'
 import type { ShopItem, Member } from '../core/types'
 import { getSpriteStyle, getSpriteStyleFromUrl } from '../core/items'
 import { spendMoney } from '../core/money'
+import { logEvent } from '../core/logs'
 import { getCategoryEmoji, getCategoryName } from '../core/categories'
 
 export function Shop() {
@@ -15,7 +16,7 @@ export function Shop() {
     spendMoney(state, item.price)
     // All purchases go to guild inventory. Food consumption will pull from inventory.
     state.inventory = [...state.inventory, { ...item }]
-    state.logs.events.unshift(`Purchased: ${item.name} (-${item.price}g)`) 
+    logEvent(state, `Purchased: ${item.name} (-${item.price}g)`) 
     emit()
   }
 

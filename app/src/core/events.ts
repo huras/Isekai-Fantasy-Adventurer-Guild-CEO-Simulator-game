@@ -1,4 +1,5 @@
 import type { GameState } from './types'
+import { logEvent } from './logs'
 
 export function rollDailyEvent(state: GameState) {
   const chance = 0.35
@@ -20,20 +21,20 @@ export function rollDailyEvent(state: GameState) {
   switch (roll) {
     case 1:
       state.money += 25
-      state.logs.events.unshift(`💰 Windfall! +25g.`)
+      logEvent(state, `💰 Windfall! +25g.`)
       break
     case 2:
       state.money = Math.max(0, state.money - 15)
-      state.logs.events.unshift(`🪙 Unexpected expense −15g.`)
+      logEvent(state, `🪙 Unexpected expense −15g.`)
       break
     case 3:
       state.notoriety += 2
-      state.logs.events.unshift(`⭐ Word spreads: +2 notoriety.`)
+      logEvent(state, `⭐ Word spreads: +2 notoriety.`)
       break
     default:
       break
   }
-  state.logs.events.unshift(summary)
+  logEvent(state, summary)
 }
 
 

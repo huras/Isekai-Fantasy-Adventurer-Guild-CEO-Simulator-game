@@ -12,6 +12,19 @@ type DraftItem = {
   sprite: { row: number; col: number }
   tilesetUrl: string
   sellable: boolean
+  equippable?: boolean
+  stackable?: boolean
+  use?: Array<{
+    stat: string
+    delta: number
+    target?: 'self' | 'guildmaster' | 'party'
+  }>
+  equip?: {
+    bonuses: Array<{
+      stat: string
+      delta: number
+    }>
+  }
 }
 
 export function Items() {
@@ -21,7 +34,17 @@ export function Items() {
   const [selectedSpriteIdx, setSelectedSpriteIdx] = useState<number | null>(null)
   const importRef = useRef<HTMLInputElement | null>(null)
   const [draft, setDraft] = useState<DraftItem>(() => ({
-    id: 'item_1', name: 'New Item', price: 10, category: 'food', sprite: { row: 0, col: 0 }, tilesetUrl: '', sellable: true
+    id: 'item_1', 
+    name: 'New Item', 
+    price: 10, 
+    category: 'food', 
+    sprite: { row: 0, col: 0 }, 
+    tilesetUrl: '', 
+    sellable: true,
+    equippable: false,
+    stackable: false,
+    use: [],
+    equip: { bonuses: [] }
   }))
   const [editingId, setEditingId] = useState<string | null>(null)
 
@@ -66,6 +89,10 @@ export function Items() {
       sprite: draft.sprite,
       tilesetUrl: draft.tilesetUrl,
       sellable: draft.sellable,
+      equippable: draft.equippable,
+      stackable: draft.stackable,
+      use: draft.use,
+      equip: draft.equip,
       apply() { /* effect no-op for now */ },
     }
     // Add into global catalog; and derive shop entry if sellable
@@ -88,6 +115,10 @@ export function Items() {
       sprite: draft.sprite,
       tilesetUrl: draft.tilesetUrl,
       sellable: draft.sellable,
+      equippable: draft.equippable,
+      stackable: draft.stackable,
+      use: draft.use,
+      equip: draft.equip,
       apply: state.itemsCatalog[idx].apply || (() => {}),
     }
     state.itemsCatalog[idx] = updated
@@ -108,6 +139,10 @@ export function Items() {
       sprite: it.sprite,
       tilesetUrl: it.tilesetUrl || '',
       sellable: !!(it as any).sellable,
+      equippable: !!(it as any).equippable,
+      stackable: !!(it as any).stackable,
+      use: (it as any).use || [],
+      equip: (it as any).equip || { bonuses: [] }
     })
     setEditingId(it.id)
     setSelectedSpriteIdx(null)
@@ -184,6 +219,61 @@ export function Items() {
       }
     }
     reader.readAsText(file)
+  }
+
+  function addUseEffect() {
+    setDraft(d => ({
+      ...d,
+      use: [...(d.use || []), { stat: 'hp', delta: 10, target: 'self' }]
+    }))
+  }
+
+  function removeUseEffect(index: number) {
+    setDraft(d => ({
+      ...d,
+      use: (d.use || []).filter((_, i) => i !== index)
+    }))
+  }
+
+  function updateUseEffect(index: number, field: string, value: any) {
+    setDraft(d => ({
+      ...d,
+      use: (d.use || []).map((effect, i) => 
+        i === index ? { ...effect, [field]: value } : effect
+      )
+    }))
+  }
+
+  function addEquipBonus() {
+    setDraft(d => ({
+      ...d,
+      equip: { 
+        ...d.equip, 
+        bonuses: [...(d.equip?.bonuses || []), { stat: 'str', delta: 1 }]
+      }
+    }))
+  }
+
+  function removeEquipBonus(index: number) {
+    setDraft(d => ({
+      ...d,
+      equip: { 
+        ...d.equip, 
+        bonuses: (d.equip?.bonuses || []).filter((_, i) => i !== index)
+      }
+    }))
+  }
+
+  function updateEquipBonus(index: number, field: string, value: any) {
+    setDraft(d => ({
+      ...d,
+      equip: { 
+        ...d.equip, 
+        bonuses: (d.equip?.bonuses || []).map((bonus, i) => 
+          i === index ? { ...bonus, [field]: value } : bonus
+        )
+      }
+    }))
   }
 
   return (
@@ -296,6 +386,18 @@ export function Items() {
                   <label htmlFor="sellable" className="form-check-label">Sellable in store</label>
                 </div>
               </div>
+              <div className="col-6">
+                <div className="form-check">
+                  <input id="equippable" className="form-check-input" type="checkbox" checked={draft.equippable} onChange={e => setDraft(d => ({ ...d, equippable: e.target.checked }))} />
+                  <label htmlFor="equippable" className="form-check-label">Equippable</label>
+                </div>
+              </div>
+              <div className="col-6">
+                <div className="form-check">
+                  <input id="stackable" className="form-check-input" type="checkbox" checked={draft.stackable} onChange={e => setDraft(d => ({ ...d, stackable: e.target.checked }))} />
+                  <label htmlFor="stackable" className="form-check-label">Stackable</label>
+                </div>
+              </div>
 
               <div className="col-12">
                 <label className="form-label small">Preview</label>
@@ -305,6 +407,122 @@ export function Items() {
                 </div>
               </div>
             </div>
+
+            {/* Item Effects Section */}
+            <div className="mt-4">
+              <div className="fw-semibold mb-2">Item Effects (Use)</div>
+              <div className="mb-2">
+                <button className="btn btn-sm btn-outline-primary" onClick={addUseEffect}>
+                  ➕ Add Effect
+                </button>
+              </div>
+              {draft.use && draft.use.map((effect, index) => (
+                <div key={index} className="border rounded p-2 mb-2">
+                  <div className="row g-2">
+                    <div className="col-4">
+                      <label className="form-label small">Stat</label>
+                      <select 
+                        className="form-select form-select-sm" 
+                        value={effect.stat} 
+                        onChange={e => updateUseEffect(index, 'stat', e.target.value)}
+                      >
+                        <option value="hp">HP</option>
+                        <option value="mp">MP</option>
+                        <option value="str">STR</option>
+                        <option value="mag">MAG</option>
+                        <option value="skill">SKILL</option>
+                        <option value="speed">SPEED</option>
+                        <option value="luck">LUCK</option>
+                        <option value="defense">DEFENSE</option>
+                        <option value="resistance">RESISTANCE</option>
+                      </select>
+                    </div>
+                    <div className="col-4">
+                      <label className="form-label small">Delta</label>
+                      <input 
+                        type="number" 
+                        className="form-control form-control-sm" 
+                        value={effect.delta} 
+                        onChange={e => updateUseEffect(index, 'delta', Number(e.target.value))} 
+                      />
+                    </div>
+                    <div className="col-3">
+                      <label className="form-label small">Target</label>
+                      <select 
+                        className="form-select form-select-sm" 
+                        value={effect.target} 
+                        onChange={e => updateUseEffect(index, 'target', e.target.value)}
+                      >
+                        <option value="self">Self</option>
+                        <option value="guildmaster">Guildmaster</option>
+                        <option value="party">Party</option>
+                      </select>
+                    </div>
+                    <div className="col-1 d-flex align-items-end">
+                      <button 
+                        className="btn btn-sm btn-outline-danger" 
+                        onClick={() => removeUseEffect(index)}
+                        title="Remove effect"
+                      >
+                        ❌
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Equip Bonuses Section */}
+            {draft.equippable && (
+              <div className="mt-4">
+                <div className="fw-semibold mb-2">Equip Bonuses</div>
+                <div className="mb-2">
+                  <button className="btn btn-sm btn-outline-success" onClick={addEquipBonus}>
+                    ➕ Add Bonus
+                  </button>
+                </div>
+                {draft.equip && draft.equip.bonuses.map((bonus, index) => (
+                  <div key={index} className="border rounded p-2 mb-2">
+                    <div className="row g-2">
+                      <div className="col-5">
+                        <label className="form-label small">Stat</label>
+                        <select 
+                          className="form-select form-select-sm" 
+                          value={bonus.stat} 
+                          onChange={e => updateEquipBonus(index, 'stat', e.target.value)}
+                        >
+                          <option value="str">STR</option>
+                          <option value="mag">MAG</option>
+                          <option value="skill">SKILL</option>
+                          <option value="speed">SPEED</option>
+                          <option value="luck">LUCK</option>
+                          <option value="defense">DEFENSE</option>
+                          <option value="resistance">RESISTANCE</option>
+                        </select>
+                      </div>
+                      <div className="col-5">
+                        <label className="form-label small">Bonus</label>
+                        <input 
+                          type="number" 
+                          className="form-control form-control-sm" 
+                          value={bonus.delta} 
+                          onChange={e => updateEquipBonus(index, 'delta', Number(e.target.value))} 
+                        />
+                      </div>
+                      <div className="col-2 d-flex align-items-end">
+                        <button 
+                          className="btn btn-sm btn-outline-danger" 
+                          onClick={() => removeEquipBonus(index)}
+                          title="Remove bonus"
+                        >
+                          ❌
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
 
             <div className="d-flex gap-2 mt-3">
               {!editingId && (
@@ -348,6 +566,12 @@ function ItemsList({ onEdit }: { onEdit: (it: ShopItem) => void }) {
           <div className="flex-grow-1">
             <div className="fw-semibold text-truncate">{it.name}</div>
             <div className="small text-muted">{it.category} • {it.price}g</div>
+            <div className="small text-muted">
+              {(it as any).equippable && <span className="badge text-bg-primary me-1">Equippable</span>}
+              {(it as any).stackable && <span className="badge text-bg-info me-1">Stackable</span>}
+              {(it as any).use && (it as any).use.length > 0 && <span className="badge text-bg-warning me-1">Use Effect</span>}
+              {(it as any).equip && (it as any).equip.bonuses && (it as any).equip.bonuses.length > 0 && <span className="badge text-bg-success me-1">Equip Bonus</span>}
+            </div>
           </div>
           {it.sellable && <span className="badge text-bg-success">Sellable</span>}
           <button
@@ -355,7 +579,7 @@ function ItemsList({ onEdit }: { onEdit: (it: ShopItem) => void }) {
             onClick={() => onEdit(it)}
             title="Edit item"
           >
-            Edit
+            ✏️
           </button>
           <button
             className="btn btn-sm btn-outline-danger"
@@ -367,7 +591,7 @@ function ItemsList({ onEdit }: { onEdit: (it: ShopItem) => void }) {
             }}
             title="Remove item"
           >
-            Remove
+            🗑️
           </button>
         </div>
       ))}

@@ -5,6 +5,7 @@ import { advanceMissionsOneDay, autoAssign, generateQuestList, createBattleFromM
 import { dailyUpkeep, spendMoney } from './money'
 import { addExperience, getExperienceProgress, getExperienceForNextLevel, getExperienceCurveEmoji, getExperienceCurveDescription } from './leveling'
 import { loadItemCategories } from './categories'
+import { logEvent, logBattle } from './logs'
 // import { generateInitialShop } from './items'
 
 const initialState: GameState = {
@@ -217,7 +218,7 @@ export function StoreProvider({ children, initial }: { children: React.ReactNode
         items: [
           { id: '1754878147635' },
           { id: '1754878147635' },
-          { id: '1754864404298' },
+          { id: '1755037566949' },
           { id: '1754864404298' },
           { id: '1754864404298' },
           { id: '1754864578481' },
@@ -381,7 +382,7 @@ export function StoreProvider({ children, initial }: { children: React.ReactNode
     async nextDay() {
       // If a battle is active, do not advance day; battles resolve via actions
       if (state.battle) {
-        state.logs.events.unshift('⚔️ Ongoing battle prevents the day from advancing.')
+        logEvent(state, '⚔️ Ongoing battle prevents the day from advancing.')
         dispatch({ type: 'emit' })
         return
       }
@@ -402,7 +403,7 @@ export function StoreProvider({ children, initial }: { children: React.ReactNode
         const moneyBefore = state.money
         spendMoney(state, upkeepCost)
         const paid = Math.min(moneyBefore, upkeepCost)
-        state.logs.events.unshift(`🏷️ Daily upkeep paid: −${paid}g`)
+        logEvent(state, `🏷️ Daily upkeep paid: −${paid}g`)
       }
 
       // Daily: expire outdated quests, log, and archive
@@ -417,7 +418,7 @@ export function StoreProvider({ children, initial }: { children: React.ReactNode
       state.quests = activeQuests
       if (expiredQuests.length) {
         state.archives.quests.unshift(...expiredQuests)
-        expiredQuests.forEach(eq => state.logs.events.unshift(`⌛ Quest expired: ${eq.name} (D${eq.expiredOnDay})`))
+        expiredQuests.forEach(eq => logEvent(state, `⌛ Quest expired: ${eq.name} (D${eq.expiredOnDay})`))
       }
 
       // Daily: generate new quests and append
@@ -451,7 +452,7 @@ export function StoreProvider({ children, initial }: { children: React.ReactNode
         state.candidates = surviving
           if (expired.length) {
           state.archives.candidates.unshift(...expired)
-          expired.forEach(ec => state.logs.events.unshift(`🕰️ Candidate expired: ${ec.name} — ${ec.class} (W${ec.expiredOnWeek})`))
+          expired.forEach(ec => logEvent(state, `🕰️ Candidate expired: ${ec.name} — ${ec.class} (W${ec.expiredOnWeek})`))
         }
         // Append new weekly candidates
         const newCandidates = await generateCandidates(state.notoriety, state.week)
@@ -480,7 +481,7 @@ export function StoreProvider({ children, initial }: { children: React.ReactNode
       b.log.unshift(`${actor.name} hits ${target.name} for ${dmg}`)
       
       // Log attack to event log
-      state.logs.events.unshift(`⚔️ ${actor.name} attacks ${target.name} for ${dmg} damage`)
+      logEvent(state, `⚔️ ${actor.name} attacks ${target.name} for ${dmg} damage`)
       
       // Award experience for defeating this specific enemy
       if (target.hp <= 0) {
@@ -495,17 +496,17 @@ export function StoreProvider({ children, initial }: { children: React.ReactNode
           const result = addExperience(member, totalExp)
           if (result.leveledUp) {
             b.log.unshift(`🎉 ${member.name} leveled up to Lv.${member.level}! (+${totalExp} EXP for defeating ${target.name})`)
-            state.logs.events.unshift(`🎉 ${member.name} leveled up to Lv.${member.level}! (+${totalExp} EXP for defeating ${target.name})`)
+            logEvent(state, `🎉 ${member.name} leveled up to Lv.${member.level}! (+${totalExp} EXP for defeating ${target.name})`)
           } else {
             b.log.unshift(`⭐ ${member.name} gained ${totalExp} experience for defeating ${target.name}`)
-            state.logs.events.unshift(`⭐ ${member.name} gained ${totalExp} experience for defeating ${target.name}`)
+            logEvent(state, `⭐ ${member.name} gained ${totalExp} experience for defeating ${target.name}`)
           }
         }
       }
       
       if (b.enemies.every(e => e.hp <= 0)) {
         b.log.unshift('Enemies defeated!')
-        state.logs.events.unshift(`⚔️ Wave ${b.wave} cleared in ${b.questName}!`)
+        logEvent(state, `⚔️ Wave ${b.wave} cleared in ${b.questName}!`)
         
         // Signal continue to next wave or finish
         this.battleContinue()
@@ -532,7 +533,7 @@ export function StoreProvider({ children, initial }: { children: React.ReactNode
       actor.hp = Math.min(actor.hpMax, actor.hp + 2)
       
       // Log defend action to event log
-      state.logs.events.unshift(`🛡️ ${actor.name} defends and recovers 2 HP`)
+      logEvent(state, `🛡️ ${actor.name} defends and recovers 2 HP`)
       
       // Award small experience for successful defense
       const member = state.members.find(m => m.id === actor.id)
@@ -541,7 +542,7 @@ export function StoreProvider({ children, initial }: { children: React.ReactNode
         const result = addExperience(member, defenseExp)
         if (result.leveledUp) {
           b.log.unshift(`🎉 ${member.name} leveled up to Lv.${member.level}! (+${defenseExp} EXP for tactical defense)`)
-          state.logs.events.unshift(`🎉 ${member.name} leveled up to Lv.${member.level}! (+${defenseExp} EXP for tactical defense)`)
+          logEvent(state, `🎉 ${member.name} leveled up to Lv.${member.level}! (+${defenseExp} EXP for tactical defense)`)
         }
       }
       
@@ -593,7 +594,7 @@ export function StoreProvider({ children, initial }: { children: React.ReactNode
           // All allies down (should have been caught already), end battle
           b.log.unshift('Your party has been defeated...')
           state.isGameOver = true
-          state.logs.events.unshift('💀 Battle lost. Game Over.')
+          logEvent(state, '💀 Battle lost. Game Over.')
           dispatch({ type: 'emit' })
           return
         }
@@ -603,12 +604,12 @@ export function StoreProvider({ children, initial }: { children: React.ReactNode
         b.log.unshift(`${actor.name} hits ${target.name} for ${dmg}`)
         
         // Log enemy attack to event log
-        state.logs.events.unshift(`👹 ${actor.name} attacks ${target.name} for ${dmg} damage`)
+        logEvent(state, `👹 ${actor.name} attacks ${target.name} for ${dmg} damage`)
         
         if (b.allies.every(a => a.hp <= 0)) {
           b.log.unshift('Your party has been defeated...')
           state.isGameOver = true
-          state.logs.events.unshift('💀 Battle lost. Game Over.')
+          logEvent(state, '💀 Battle lost. Game Over.')
           dispatch({ type: 'emit' })
           return
         }
@@ -645,10 +646,10 @@ export function StoreProvider({ children, initial }: { children: React.ReactNode
         // Spawn next wave
         const next = createBattleFromMission(m, (b.wave || 1) + 1, m.battlesPlanned || (b.wavesTotal || 1))
         state.battle = next
-        state.logs.events.unshift(`⚔️ A new wave approaches!`)
+        logEvent(state, `⚔️ A new wave approaches!`)
       } else {
         // Clear battle and resume mission progression next day
-        state.logs.events.unshift(`⚔️ Battle concluded. Quest combat cleared.`)
+        logEvent(state, `⚔️ Battle concluded. Quest combat cleared.`)
         
         // Ensure counters are consistent
         m.battlesCleared = m.battlesPlanned || m.battlesCleared || 0
@@ -658,7 +659,7 @@ export function StoreProvider({ children, initial }: { children: React.ReactNode
     },
     serveBreakfast() {
       tryServeBreakfast()
-      state.logs.events.unshift('🍳 Breakfast served')
+      logEvent(state, '🍳 Breakfast served')
       dispatch({ type: 'emit' })
     },
     save() {
@@ -691,10 +692,10 @@ export function StoreProvider({ children, initial }: { children: React.ReactNode
             document.body.removeChild(a)
             URL.revokeObjectURL(url)
           }
-          state.logs.events.unshift('💾 Save exported to file')
+          logEvent(state, '💾 Save exported to file')
         } catch (err) {
           console.error('[Save] failed (file export):', err)
-          state.logs.events.unshift('⚠️ Save export failed')
+          logEvent(state, '⚠️ Save export failed')
         }
         dispatch({ type: 'emit' })
       })()
@@ -715,7 +716,7 @@ export function StoreProvider({ children, initial }: { children: React.ReactNode
               ],
             })
             const handle = Array.isArray(handles) ? handles[0] : null
-            if (!handle) { state.logs.events.unshift('ℹ️ Load cancelled'); dispatch({ type: 'emit' }); return }
+            if (!handle) { logEvent(state, 'ℹ️ Load cancelled'); dispatch({ type: 'emit' }); return }
             const file = await handle.getFile()
             text = await file.text()
           } else {
@@ -738,14 +739,14 @@ export function StoreProvider({ children, initial }: { children: React.ReactNode
               setTimeout(() => { if (document.body.contains(input)) document.body.removeChild(input) }, 0)
             })
           }
-          if (!text) { state.logs.events.unshift('ℹ️ No file selected') ; dispatch({ type: 'emit' }); return }
+          if (!text) { logEvent(state, 'ℹ️ No file selected'); dispatch({ type: 'emit' }); return }
           const parsed = JSON.parse(text)
           const hydrated = hydrateLoadedState(parsed, state)
-          hydrated.logs.events.unshift('📥 Game loaded from file')
+          logEvent(hydrated, '📥 Game loaded from file')
           dispatch({ type: 'load', payload: hydrated })
         } catch (err) {
           console.error('[Load] failed (file import):', err)
-          state.logs.events.unshift('⚠️ Load failed (invalid file)')
+          logEvent(state, '⚠️ Load failed (invalid file)')
           dispatch({ type: 'emit' })
         }
       })()

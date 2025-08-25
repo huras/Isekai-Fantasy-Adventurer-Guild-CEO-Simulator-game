@@ -2,6 +2,7 @@ import React, { useMemo, useState } from 'react'
 import type { ActiveMission, Member } from '../core/types'
 import { useStore } from '../core/store'
 import { createBattleFromMission } from '../core/quests'
+import { logEvent } from '../core/logs'
 
 export function BattleAdmin() {
   const { state, emit } = useStore()
@@ -46,7 +47,7 @@ export function BattleAdmin() {
     state.activeMissions = state.activeMissions || []
     state.activeMissions.unshift(mission)
     state.battle = createBattleFromMission(mission, 1, mission.battlesPlanned || 1)
-    state.logs.events.unshift(`🧪 Admin: started test battle "${mission.name}" with ${party.length} ally(ies), diff ${mission.diff}, waves ${mission.battlesPlanned}`)
+    logEvent(state, `🧪 Admin: started test battle "${mission.name}" with ${party.length} ally(ies), diff ${mission.diff}, waves ${mission.battlesPlanned}`)
     emit()
   }
 

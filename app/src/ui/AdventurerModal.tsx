@@ -315,10 +315,10 @@ export function AdventurerModal({ open, onClose, adventurer }: { open: boolean; 
       memberRef.equippedInstanceIds = memberRef.equippedInstanceIds.filter(x => x !== instId)
       console.log('[Equip] unequipped instance', instId, 'equippedAfter', memberRef.equippedInstanceIds)
     } else {
-      // Simple rule: only equip items that have equip bonuses in catalog
+      // Simple rule: only equip items that are marked as equippable
       const base = catalog.find(ci => ci.id === src.id)
-      const canEquip = !!(base as any)?.equip
-      console.log('[Equip] base item', base, 'canEquip', canEquip, 'equipData', (base as any)?.equip)
+      const canEquip = !!(base as any)?.equippable
+      console.log('[Equip] base item', base, 'canEquip', canEquip, 'equippable', (base as any)?.equippable)
       if (!canEquip) return
       memberRef.equippedInstanceIds.push(instId)
       console.log('[Equip] equipped instance', instId, 'equippedAfter', memberRef.equippedInstanceIds)
@@ -1082,10 +1082,25 @@ export function AdventurerModal({ open, onClose, adventurer }: { open: boolean; 
                                 {actionIdx === idx && (
                                   <div className="custom-popover">
                                     <div className="popover-body d-flex flex-column gap-2">
-                                      <button className="btn btn-sm btn-outline-success" disabled={!((catalog.find(ci => ci.id === ref.id) as any)?.use)} onClick={(e) => { e.stopPropagation(); useItemAtSlot(idx); setActionIdx(null) }}>Use</button>
-                                      <button className={`btn btn-sm ${((memberRef && (memberRef.equippedInstanceIds || []).some(eid => (ref.instanceIds || []).includes(eid)))) ? 'btn-warning' : 'btn-outline-secondary'}`} disabled={!((catalog.find(ci => ci.id === ref.id) as any)?.equip)} onClick={(e) => { e.stopPropagation(); toggleEquipAtSlot(idx); setActionIdx(null) }}>
-                                        {((memberRef && (memberRef.equippedInstanceIds || []).some(eid => (ref.instanceIds || []).includes(eid)))) ? 'Unequip' : 'Equip'}
-                                      </button>
+                                      {(() => {
+                                        const catalogItem = catalog.find(ci => ci.id === ref.id)
+                                        const hasUseEffects = catalogItem && Array.isArray((catalogItem as any).use) && (catalogItem as any).use.length > 0
+                                        return hasUseEffects ? (
+                                          <button className="btn btn-sm btn-outline-success" onClick={(e) => { e.stopPropagation(); useItemAtSlot(idx); setActionIdx(null) }}>Use</button>
+                                        ) : null
+                                      })()}
+                                      {(() => {
+                                        const catalogItem = catalog.find(ci => ci.id === ref.id)
+                                        const isEquippable = !!(catalogItem as any)?.equippable
+                                          return isEquippable ? (
+                                            <button 
+                                              className={'btn btn-sm ' + ((memberRef && (memberRef.equippedInstanceIds || []).some(eid => (ref.instanceIds || []).includes(eid))) ? 'btn-warning' : 'btn-outline-secondary')} 
+                                              onClick={(e) => { e.stopPropagation(); toggleEquipAtSlot(idx); setActionIdx(null) }}
+                                            >
+                                              {((memberRef && (memberRef.equippedInstanceIds || []).some(eid => (ref.instanceIds || []).includes(eid))) ? 'Unequip' : 'Equip')}
+                                            </button>
+                                          ) : null
+                                      })()}
                                       {((catalog.find(ci => ci.id === ref.id) as any)?.stackable) && (ref.qty || 1) > 1 && (
                                         <>
                                           {(ref.qty || 1) === 2 ? (

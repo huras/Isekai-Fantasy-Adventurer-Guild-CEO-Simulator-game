@@ -9,6 +9,7 @@ import { Quests } from './Quests'
 import { Kitchen } from './Kitchen'
 import { Shop } from './Shop'
 import { Battle } from './Battle'
+import { BattleModal } from './BattleModal'
 import { Events } from './Events'
 import { Expired } from './Expired'
 import { Tilesets } from './Tilesets'
@@ -30,6 +31,7 @@ function MainTabs() {
     { key: 'items', label: 'Items (admin)', icon: '🎒', render: () => <Items /> },
     { key: 'guild-inventory', label: 'Guild Inventory', icon: '📦', render: () => <GuildInventory /> },
     { key: 'shop', label: 'Shop', icon: '🛒', render: () => <Shop /> },
+    // Keep battle tab for admin/testing, but it will be disabled during active battles and UI shown in modal
     { key: 'battle', label: inBattle ? 'Battle (Active)' : 'Battle', icon: '⚔️', highlight: inBattle, render: () => <Battle /> },
     { key: 'battle-admin', label: 'Battle Trigger (admin)', icon: '🧪', render: () => <BattleAdmin /> },
     { key: 'events', label: 'Events', icon: '💬', render: () => <Events /> },
@@ -44,6 +46,8 @@ export function App({ initialState }: { initialState?: Partial<import('../core/t
       <Header />
       <MainTabs />
       <NextDayFAB />
+      {/* Global battle modal overlay. Unclosable; only ends via battle actions. */}
+      <BattleModal />
     </StoreProvider>
   )
 }

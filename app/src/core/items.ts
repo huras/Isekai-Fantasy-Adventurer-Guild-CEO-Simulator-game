@@ -1,4 +1,5 @@
 import type { GameState, ShopItem, ItemCategoryId } from './types'
+import { logEvent } from './logs'
 import type React from 'react'
 
 export const TILE_SIZE = 32
@@ -72,7 +73,7 @@ function createItem(params: {
     desc: params.desc,
     apply(state: GameState) {
       // Placeholder effect; systems for item usage can hook into this later
-      state.logs.events.unshift(`Obtained: ${params.name}`)
+      logEvent(state, `Obtained: ${params.name}`)
     },
   }
 }
