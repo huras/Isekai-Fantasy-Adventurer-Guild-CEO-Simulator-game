@@ -1,0 +1,686 @@
+{
+  "version": 1,
+  "savedAt": 1755021380781,
+  "state": {
+    "day": 4,
+    "week": 1,
+    "money": 6000015,
+    "notoriety": 2,
+    "members": [
+      {
+        "id": "player",
+        "isPlayer": true,
+        "name": "You",
+        "class": "Guildmaster",
+        "personality": "heroic",
+        "gender": "male",
+        "appearance": "♂️ Summoned human with dark hair and determined eyes; beauty 7/10",
+        "upkeep": 0,
+        "stats": {
+          "str": 6,
+          "mag": 6,
+          "skill": 6,
+          "speed": 3,
+          "luck": 6,
+          "defense": 4,
+          "resistance": 4
+        },
+        "hpMax": 40,
+        "hp": 33,
+        "mp": 10,
+        "mpMax": 300,
+        "speed": 3,
+        "skills": [
+          "Leadership",
+          "Tactics"
+        ],
+        "level": 1,
+        "experience": 60,
+        "experienceCurve": "normal",
+        "items": [
+          {
+            "id": "1754878147635",
+            "qty": 1,
+            "instanceIds": [
+              "inst_55e9c841-c6d4-4158-84f2-44a6e80a2081"
+            ]
+          },
+          {
+            "id": "1754878147635",
+            "qty": 1,
+            "instanceIds": [
+              "inst_5e3ae3d3-44b4-46af-a3af-62ca607d1aac"
+            ]
+          },
+          {
+            "id": "1754864578481",
+            "qty": 1,
+            "instanceIds": [
+              "inst_169c78ea-da27-47aa-aef6-d50c1431b379"
+            ]
+          },
+          {
+            "id": "1754955449841",
+            "qty": 1,
+            "instanceIds": [
+              "inst_d2f94971-cd8a-4793-bf10-d0bba5edf80f"
+            ]
+          },
+          {
+            "id": "1754935730336",
+            "qty": 1,
+            "instanceIds": [
+              "inst_66c864e3-ef02-4324-a6ee-2d149f32f040"
+            ]
+          }
+        ],
+        "equippedInstanceIds": [
+          "inst_55e9c841-c6d4-4158-84f2-44a6e80a2081",
+          "inst_5e3ae3d3-44b4-46af-a3af-62ca607d1aac",
+          "inst_66c864e3-ef02-4324-a6ee-2d149f32f040"
+        ]
+      },
+      {
+        "id": "mem_sa6jc0v",
+        "name": "Talia 61",
+        "class": "Rogue",
+        "personality": "cunning",
+        "gender": "female",
+        "appearance": "♀️ stoic elf with blonde hair and amber eyes; beauty 7/10",
+        "avatar": "/adventurers/00198-341105996.png",
+        "upkeep": 8,
+        "stats": {
+          "str": 6,
+          "mag": 4,
+          "skill": 5,
+          "speed": 5,
+          "luck": 2,
+          "defense": 2,
+          "resistance": 2
+        },
+        "hpMax": 20,
+        "hp": 20,
+        "mpMax": 12,
+        "mp": 12,
+        "speed": 1,
+        "skills": [
+          "Backstab"
+        ],
+        "level": 1,
+        "experience": 15,
+        "experienceCurve": "normal",
+        "baseLevel": 1,
+        "baseExp": 0,
+        "classLevel": 1,
+        "classExp": 0,
+        "skillLevels": {
+          "Backstab": 1
+        },
+        "skillExp": {},
+        "alive": true,
+        "items": [
+          {
+            "id": "1754864578481",
+            "qty": 1,
+            "instanceIds": [
+              "inst_b6ee7f6b-ee93-451a-b715-7b9059f6e330"
+            ]
+          },
+          {
+            "id": "1754935730336",
+            "qty": 1,
+            "instanceIds": [
+              "inst_ce6d2ca9-4c9e-4a6c-a8fd-7ccfb2809900"
+            ]
+          },
+          {
+            "id": "1754878147635",
+            "qty": 1,
+            "instanceIds": [
+              "inst_61b18d9d-95c7-47a1-99d3-429932085702"
+            ]
+          }
+        ],
+        "equippedInstanceIds": [
+          "inst_ce6d2ca9-4c9e-4a6c-a8fd-7ccfb2809900",
+          "inst_61b18d9d-95c7-47a1-99d3-429932085702"
+        ]
+      }
+    ],
+    "candidates": [
+      {
+        "id": "cand_ek67vta",
+        "name": "Hana 36",
+        "class": "Ranger",
+        "personality": "heroic",
+        "gender": "female",
+        "appearance": "♀️ cheerful dragonkin with blue hair and green eyes; beauty 6/10",
+        "avatar": "/adventurers/00125-3418884387.png",
+        "stats": {
+          "str": 3,
+          "mag": 5,
+          "skill": 8,
+          "speed": 4,
+          "luck": 2,
+          "defense": 3,
+          "resistance": 6,
+          "hp": 24
+        },
+        "upkeep": 9,
+        "skills": [
+          "Aim"
+        ],
+        "weekAppeared": 1,
+        "expiresOnWeek": 3,
+        "starterItems": [
+          {
+            "id": "1754864404298",
+            "qty": 1
+          }
+        ]
+      },
+      {
+        "id": "cand_5owemp4",
+        "name": "Lyra 31",
+        "class": "Ranger",
+        "personality": "heroic",
+        "gender": "female",
+        "appearance": "♀️ elegant dragonkin with blue hair and blue eyes; beauty 6/10",
+        "avatar": "/adventurers/00357-3184027780.png",
+        "stats": {
+          "str": 2,
+          "mag": 3,
+          "skill": 3,
+          "speed": 4,
+          "luck": 6,
+          "defense": 3,
+          "resistance": 3,
+          "hp": 16
+        },
+        "upkeep": 8,
+        "skills": [
+          "Aim"
+        ],
+        "weekAppeared": 1,
+        "expiresOnWeek": 2,
+        "starterItems": [
+          {
+            "id": "1754864563561",
+            "qty": 1
+          }
+        ]
+      }
+    ],
+    "quests": [
+      {
+        "id": "quest_u5edhtw",
+        "name": "🔎 Find Guard Captain",
+        "desc": "Find Guard Captain. Rank H. Trip ~1d.",
+        "diff": 2,
+        "rank": "H",
+        "reward": 57,
+        "fame": 1,
+        "day": 2,
+        "expiresOnDay": 5,
+        "daysRequired": 1,
+        "type": "Beginner",
+        "tags": [
+          "Find",
+          "Person",
+          "Beginner"
+        ],
+        "emoji": "🔎",
+        "job": "Find",
+        "target": "Person",
+        "assigned": [
+          {
+            "id": "player",
+            "isPlayer": true,
+            "name": "You",
+            "class": "Guildmaster",
+            "personality": "heroic",
+            "gender": "male",
+            "appearance": "♂️ Summoned human with dark hair and determined eyes; beauty 7/10",
+            "upkeep": 0,
+            "stats": {
+              "str": 6,
+              "mag": 6,
+              "skill": 6,
+              "speed": 3,
+              "luck": 6,
+              "defense": 4,
+              "resistance": 4
+            },
+            "hpMax": 40,
+            "hp": 33,
+            "mp": 10,
+            "mpMax": 300,
+            "speed": 3,
+            "skills": [
+              "Leadership",
+              "Tactics"
+            ],
+            "level": 1,
+            "experience": 60,
+            "experienceCurve": "normal",
+            "items": [
+              {
+                "id": "1754878147635",
+                "qty": 1,
+                "instanceIds": [
+                  "inst_55e9c841-c6d4-4158-84f2-44a6e80a2081"
+                ]
+              },
+              {
+                "id": "1754878147635",
+                "qty": 1,
+                "instanceIds": [
+                  "inst_5e3ae3d3-44b4-46af-a3af-62ca607d1aac"
+                ]
+              },
+              {
+                "id": "1754864578481",
+                "qty": 1,
+                "instanceIds": [
+                  "inst_169c78ea-da27-47aa-aef6-d50c1431b379"
+                ]
+              },
+              {
+                "id": "1754955449841",
+                "qty": 1,
+                "instanceIds": [
+                  "inst_d2f94971-cd8a-4793-bf10-d0bba5edf80f"
+                ]
+              },
+              {
+                "id": "1754935730336",
+                "qty": 1,
+                "instanceIds": [
+                  "inst_66c864e3-ef02-4324-a6ee-2d149f32f040"
+                ]
+              }
+            ],
+            "equippedInstanceIds": [
+              "inst_55e9c841-c6d4-4158-84f2-44a6e80a2081",
+              "inst_5e3ae3d3-44b4-46af-a3af-62ca607d1aac",
+              "inst_66c864e3-ef02-4324-a6ee-2d149f32f040"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "quest_vmy02jt",
+        "name": "🔎 Find Scholar",
+        "desc": "Find Scholar. Rank H. Trip ~1d.",
+        "diff": 2,
+        "rank": "H",
+        "reward": 63,
+        "fame": 1,
+        "day": 2,
+        "expiresOnDay": 5,
+        "daysRequired": 1,
+        "type": "Beginner",
+        "tags": [
+          "Find",
+          "Person",
+          "Beginner"
+        ],
+        "emoji": "🔎",
+        "job": "Find",
+        "target": "Person",
+        "assigned": [
+          {
+            "id": "mem_sa6jc0v",
+            "name": "Talia 61",
+            "class": "Rogue",
+            "personality": "cunning",
+            "gender": "female",
+            "appearance": "♀️ stoic elf with blonde hair and amber eyes; beauty 7/10",
+            "avatar": "/adventurers/00198-341105996.png",
+            "upkeep": 8,
+            "stats": {
+              "str": 6,
+              "mag": 4,
+              "skill": 5,
+              "speed": 5,
+              "luck": 2,
+              "defense": 2,
+              "resistance": 2
+            },
+            "hpMax": 20,
+            "hp": 20,
+            "mpMax": 12,
+            "mp": 12,
+            "speed": 1,
+            "skills": [
+              "Backstab"
+            ],
+            "level": 1,
+            "experience": 15,
+            "experienceCurve": "normal",
+            "baseLevel": 1,
+            "baseExp": 0,
+            "classLevel": 1,
+            "classExp": 0,
+            "skillLevels": {
+              "Backstab": 1
+            },
+            "skillExp": {},
+            "alive": true,
+            "items": [
+              {
+                "id": "1754864578481",
+                "qty": 1,
+                "instanceIds": [
+                  "inst_b6ee7f6b-ee93-451a-b715-7b9059f6e330"
+                ]
+              },
+              {
+                "id": "1754935730336",
+                "qty": 1,
+                "instanceIds": [
+                  "inst_ce6d2ca9-4c9e-4a6c-a8fd-7ccfb2809900"
+                ]
+              },
+              {
+                "id": "1754878147635",
+                "qty": 1,
+                "instanceIds": [
+                  "inst_61b18d9d-95c7-47a1-99d3-429932085702"
+                ]
+              },
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null
+            ],
+            "equippedInstanceIds": [
+              "inst_ce6d2ca9-4c9e-4a6c-a8fd-7ccfb2809900",
+              "inst_61b18d9d-95c7-47a1-99d3-429932085702"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "quest_g4batbv",
+        "name": "🛡️ Protect Goblin",
+        "desc": "Protect Goblin. Rank G. Trip ~1d.",
+        "diff": 3,
+        "rank": "G",
+        "reward": 83,
+        "fame": 1,
+        "day": 2,
+        "expiresOnDay": 5,
+        "daysRequired": 1,
+        "type": "Combat",
+        "tags": [
+          "Protect",
+          "Monster",
+          "Combat"
+        ],
+        "emoji": "🛡️",
+        "job": "Protect",
+        "target": "Monster",
+        "assigned": []
+      },
+      {
+        "id": "quest_ye5w9yl",
+        "name": "📦 Deliver Dragon",
+        "desc": "Deliver Dragon. Rank H. Trip ~1d.",
+        "diff": 1,
+        "rank": "H",
+        "reward": 25,
+        "fame": 1,
+        "day": 3,
+        "expiresOnDay": 5,
+        "daysRequired": 1,
+        "type": "Beginner",
+        "tags": [
+          "Deliver",
+          "Monster",
+          "Beginner"
+        ],
+        "emoji": "📦",
+        "job": "Deliver",
+        "target": "Monster",
+        "assigned": []
+      },
+      {
+        "id": "quest_hpbnflm",
+        "name": "🔎 Find Exotic Food",
+        "desc": "Find Exotic Food. Rank H. Trip ~1d.",
+        "diff": 1,
+        "rank": "H",
+        "reward": 29,
+        "fame": 1,
+        "day": 3,
+        "expiresOnDay": 5,
+        "daysRequired": 1,
+        "type": "Beginner",
+        "tags": [
+          "Find",
+          "Item",
+          "Beginner"
+        ],
+        "emoji": "🔎",
+        "job": "Find",
+        "target": "Item",
+        "assigned": []
+      },
+      {
+        "id": "quest_enhh8r8",
+        "name": "🛡️ Escort Merchant",
+        "desc": "Escort Merchant. Rank G. Trip ~1d.",
+        "diff": 3,
+        "rank": "G",
+        "reward": 75,
+        "fame": 1,
+        "day": 3,
+        "expiresOnDay": 5,
+        "daysRequired": 1,
+        "type": "Exploration",
+        "tags": [
+          "Escort",
+          "Person",
+          "Exploration"
+        ],
+        "emoji": "🛡️",
+        "job": "Escort",
+        "target": "Person",
+        "assigned": []
+      },
+      {
+        "id": "quest_6sffuw4",
+        "name": "📦 Deliver Warg",
+        "desc": "Deliver Warg. Rank G. Trip ~1d.",
+        "diff": 3,
+        "rank": "G",
+        "reward": 79,
+        "fame": 1,
+        "day": 4,
+        "expiresOnDay": 7,
+        "daysRequired": 1,
+        "type": "Beginner",
+        "tags": [
+          "Deliver",
+          "Monster",
+          "Beginner"
+        ],
+        "emoji": "📦",
+        "job": "Deliver",
+        "target": "Monster",
+        "assigned": []
+      },
+      {
+        "id": "quest_32fr08q",
+        "name": "📦 Deliver Wolf",
+        "desc": "Deliver Wolf. Rank H. Trip ~1d.",
+        "diff": 1,
+        "rank": "H",
+        "reward": 38,
+        "fame": 1,
+        "day": 4,
+        "expiresOnDay": 7,
+        "daysRequired": 1,
+        "type": "Beginner",
+        "tags": [
+          "Deliver",
+          "Monster",
+          "Beginner"
+        ],
+        "emoji": "📦",
+        "job": "Deliver",
+        "target": "Monster",
+        "assigned": []
+      },
+      {
+        "id": "quest_426qzmz",
+        "name": "🛡️ Protect Pink Slime",
+        "desc": "Protect Pink Slime. Rank G. Trip ~1d.",
+        "diff": 3,
+        "rank": "G",
+        "reward": 83,
+        "fame": 1,
+        "day": 4,
+        "expiresOnDay": 7,
+        "daysRequired": 1,
+        "type": "Combat",
+        "tags": [
+          "Protect",
+          "Monster",
+          "Combat"
+        ],
+        "emoji": "🛡️",
+        "job": "Protect",
+        "target": "Monster",
+        "assigned": []
+      }
+    ],
+    "activeMissions": [],
+    "inventory": [
+      {
+        "id": "1754864578481",
+        "name": "Small HP Potion",
+        "desc": "Restores 20 HP",
+        "price": 20,
+        "category": "potion",
+        "sprite": {
+          "row": 2,
+          "col": 7
+        },
+        "tilesetUrl": "/items/tileset_1.png",
+        "sellable": true,
+        "stackable": true,
+        "use": {
+          "type": "heal",
+          "amount": 20,
+          "target": "ally"
+        }
+      }
+    ],
+    "logs": {
+      "events": [
+        "💾 Save exported to file",
+        "Purchased: Small HP Potion (-20g)",
+        "Purchased: Cloth Armor (-50g)",
+        "Purchased: Short Sword (-25g)",
+        "🏷️ Daily upkeep paid: −8g",
+        "⏰ Mission failed: 🔎 Find Wolf - Time expired",
+        "💰 Mission completed: ⚔️ Eliminate Warg - +134g, +2 notoriety",
+        "⭐ You gained 88 experience from ⚔️ Eliminate Warg",
+        "⚔️ Battle concluded. Quest combat cleared.",
+        "⚔️ Wave 2 cleared in ⚔️ Eliminate Warg!",
+        "⭐ You gained 22 experience for defeating Wolf",
+        "⚔️ You attacks Wolf for 20 damage",
+        "👹 Wolf attacks You for 10 damage",
+        "⚔️ You attacks Wolf for 16 damage",
+        "⚔️ A new wave approaches!",
+        "⚔️ Wave 1 cleared in ⚔️ Eliminate Warg!",
+        "⭐ You gained 23 experience for defeating Pink Slime",
+        "⚔️ You attacks Pink Slime for 15 damage",
+        "👹 Pink Slime attacks You for 9 damage",
+        "⚔️ You attacks Pink Slime for 18 damage",
+        "⚔️ Battle begins during ⚔️ Eliminate Warg!",
+        "🧭 1 set out: ⚔️ Eliminate Warg",
+        "🧭 1 set out: 🔎 Find Wolf",
+        "🏷️ Daily upkeep paid: −8g",
+        "⏰ Mission failed: 🛡️ Protect Blue Slime - Time expired",
+        "⏰ Mission failed: 🛡️ Protect Abandoned Mine - Time expired",
+        "📥 Game loaded from file",
+        "You uses Uva on You (+5 HP)",
+        "You uses Uva on You (+5 HP)",
+        "You uses Uva on You (+5 HP)",
+        "⚔️ Battle concluded. Quest combat cleared.",
+        "⚔️ Wave 1 cleared in 🛡️ Protect Blue Slime!",
+        "⭐ You gained 15 experience for defeating Bandit",
+        "⚔️ You attacks Bandit for 25 damage",
+        "🧭 1 set out: 🛡️ Protect Abandoned Mine",
+        "⚔️ Battle begins during 🛡️ Protect Blue Slime!",
+        "🧭 1 set out: 🛡️ Protect Blue Slime",
+        "🏷️ Daily upkeep paid: −8g",
+        "⏰ Mission failed: 🛡️ Escort Legendary Item - Time expired",
+        "⏰ Mission failed: ⚔️ Eliminate Scholar - Time expired",
+        "⚔️ Battle concluded. Quest combat cleared.",
+        "⚔️ Wave 1 cleared in ⚔️ Eliminate Scholar!",
+        "⭐ Talia 61 gained 15 experience for defeating Bandit",
+        "⚔️ Talia 61 attacks Bandit for 10 damage",
+        "👹 Bandit attacks Talia 61 for 6 damage",
+        "⚔️ Talia 61 attacks Bandit for 16 damage",
+        "⚔️ Battle begins during ⚔️ Eliminate Scholar!",
+        "🧭 1 set out: ⚔️ Eliminate Scholar",
+        "🧭 1 set out: 🛡️ Escort Legendary Item"
+      ],
+      "battle": []
+    },
+    "modifiers": {
+      "upkeepDeltaPerMember": 0,
+      "questSuccessBonus": 0,
+      "recruitStatBonus": 0
+    },
+    "settings": {
+      "autoAssign": false
+    },
+    "archives": {
+      "quests": [
+        {
+          "id": "quest_dgpy33z",
+          "name": "⚔️ Eliminate Scholar",
+          "expiredOnDay": 2
+        },
+        {
+          "id": "quest_en836ku",
+          "name": "🛡️ Escort Legendary Item",
+          "expiredOnDay": 2
+        },
+        {
+          "id": "quest_pzb7wux",
+          "name": "🛡️ Protect Abandoned Mine",
+          "expiredOnDay": 3
+        },
+        {
+          "id": "quest_bnd598w",
+          "name": "🛡️ Protect Blue Slime",
+          "expiredOnDay": 3
+        },
+        {
+          "id": "quest_ymm15kt",
+          "name": "⚔️ Eliminate Warg",
+          "expiredOnDay": 4
+        },
+        {
+          "id": "quest_utxq33x",
+          "name": "🔎 Find Wolf",
+          "expiredOnDay": 4
+        }
+      ],
+      "candidates": [],
+      "fallen": []
+    },
+    "isGameOver": false
+  }
+}

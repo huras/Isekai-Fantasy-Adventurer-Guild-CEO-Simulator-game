@@ -1,0 +1,482 @@
+[
+  {
+    "id": "1",
+    "name": "Amora",
+    "desc": "Uma fruta.",
+    "price": 5,
+    "category": "food",
+    "sprite": {
+      "row": 0,
+      "col": 0
+    },
+    "tilesetUrl": "/items/tileset_1.png",
+    "sellable": true,
+    "equippable": false,
+    "stackable": true
+  },
+  {
+    "id": "1754849867652",
+    "name": "Tomato",
+    "desc": "A healthy tomato",
+    "price": 12,
+    "category": "food",
+    "sprite": {
+      "row": 0,
+      "col": 1
+    },
+    "tilesetUrl": "/items/tileset_1.png",
+    "sellable": true,
+    "equippable": false,
+    "stackable": true
+  },
+  {
+    "id": "1754864404298",
+    "name": "Uva",
+    "desc": "A sweet bunch. Restores 5 HP",
+    "price": 8,
+    "category": "food",
+    "sprite": {
+      "row": 0,
+      "col": 6
+    },
+    "tilesetUrl": "/items/tileset_1.png",
+    "sellable": true,
+    "equippable": false,
+    "stackable": true,
+    "use": {
+      "type": "heal",
+      "amount": 5,
+      "target": "ally"
+    }
+  },
+  {
+    "id": "1754864425962",
+    "name": "Pineaple",
+    "price": 13,
+    "category": "food",
+    "sprite": {
+      "row": 0,
+      "col": 11
+    },
+    "tilesetUrl": "/items/tileset_1.png",
+    "sellable": true,
+    "equippable": false,
+    "stackable": true
+  },
+  {
+    "id": "1754864563561",
+    "name": "Banana",
+    "price": 7,
+    "category": "food",
+    "sprite": {
+      "row": 0,
+      "col": 12
+    },
+    "tilesetUrl": "/items/tileset_1.png",
+    "sellable": true,
+    "equippable": false,
+    "stackable": true
+  },
+  {
+    "id": "1754864578481",
+    "name": "Small HP Potion",
+    "desc": "Restores 20 HP",
+    "price": 20,
+    "category": "potion",
+    "sprite": {
+      "row": 2,
+      "col": 7
+    },
+    "tilesetUrl": "/items/tileset_1.png",
+    "sellable": true,
+    "equippable": false,
+    "stackable": true,
+    "use": {
+      "type": "heal",
+      "amount": 20,
+      "target": "ally"
+    }
+  },
+  {
+    "id": "1754878147635",
+    "name": "Short Sword",
+    "price": 25,
+    "category": "weapon",
+    "sprite": {
+      "row": 5,
+      "col": 0
+    },
+    "tilesetUrl": "/items/tileset_1.png",
+    "sellable": true,
+    "equippable": true,
+    "stackable": true,
+    "equip": {
+      "bonuses": [
+        {
+          "stat": "str",
+          "delta": 2
+        }
+      ]
+    }
+  },
+  {
+    "id": "1754878159603",
+    "name": "Long Sword",
+    "price": 150,
+    "category": "weapon",
+    "sprite": {
+      "row": 5,
+      "col": 1
+    },
+    "tilesetUrl": "/items/tileset_1.png",
+    "sellable": true,
+    "equippable": true,
+    "stackable": true,
+    "equip": {
+      "bonuses": [
+        {
+          "stat": "str",
+          "delta": 5
+        }
+      ]
+    }
+  },
+  {
+    "id": "1754878173083",
+    "name": "Broad Sword",
+    "price": 500,
+    "category": "weapon",
+    "sprite": {
+      "row": 5,
+      "col": 5
+    },
+    "tilesetUrl": "/items/tileset_1.png",
+    "sellable": true,
+    "equippable": true,
+    "stackable": true,
+    "equip": {
+      "bonuses": [
+        {
+          "stat": "str",
+          "delta": 8
+        }
+      ]
+    }
+  },
+  {
+    "id": "1754879231663",
+    "name": "Cheese",
+    "price": 10,
+    "category": "food",
+    "sprite": {
+      "row": 1,
+      "col": 9
+    },
+    "tilesetUrl": "/items/tileset_1.png",
+    "sellable": true,
+    "equippable": false,
+    "stackable": true
+  },
+  {
+    "id": "1754886749483",
+    "name": "Orage",
+    "desc": "A orage.",
+    "price": 6,
+    "category": "food",
+    "sprite": {
+      "row": 0,
+      "col": 4
+    },
+    "tilesetUrl": "/items/tileset_1.png",
+    "sellable": true,
+    "equippable": false
+  },
+  {
+    "id": "1754886769579",
+    "name": "Gree Grapes",
+    "desc": "Bem azedas.",
+    "price": 3,
+    "category": "food",
+    "sprite": {
+      "row": 0,
+      "col": 5
+    },
+    "tilesetUrl": "/items/tileset_1.png",
+    "sellable": true,
+    "equippable": false
+  },
+  {
+    "id": "1754886790467",
+    "name": "Purple Grapes",
+    "desc": "Deliciosas.",
+    "price": 8,
+    "category": "food",
+    "sprite": {
+      "row": 0,
+      "col": 6
+    },
+    "tilesetUrl": "/items/tileset_1.png",
+    "sellable": true,
+    "equippable": false
+  },
+  {
+    "id": "1754886805715",
+    "name": "Melancia",
+    "desc": "Yummy!",
+    "price": 11,
+    "category": "food",
+    "sprite": {
+      "row": 0,
+      "col": 7
+    },
+    "tilesetUrl": "/items/tileset_1.png",
+    "sellable": true,
+    "equippable": false
+  },
+  {
+    "id": "1754886818843",
+    "name": "Morango",
+    "desc": "Dá um bom milkshake! Cuidado pra não comprar o errado!",
+    "price": 30,
+    "category": "food",
+    "sprite": {
+      "row": 0,
+      "col": 8
+    },
+    "tilesetUrl": "/items/tileset_1.png",
+    "sellable": true,
+    "equippable": false
+  },
+  {
+    "id": "1754887474680",
+    "name": "Avocado",
+    "desc": "Uma fruta.",
+    "price": 25,
+    "category": "food",
+    "sprite": {
+      "row": 0,
+      "col": 9
+    },
+    "tilesetUrl": "/items/tileset_1.png",
+    "sellable": true,
+    "equippable": false
+  },
+  {
+    "id": "1754887484840",
+    "name": "Lemon",
+    "desc": "Uma fruta.",
+    "price": 25,
+    "category": "food",
+    "sprite": {
+      "row": 0,
+      "col": 10
+    },
+    "tilesetUrl": "/items/tileset_1.png",
+    "sellable": true,
+    "equippable": false
+  },
+  {
+    "id": "1754887524880",
+    "name": "Carrot",
+    "desc": "Nutritivo velhinho",
+    "price": 8,
+    "category": "food",
+    "sprite": {
+      "row": 1,
+      "col": 1
+    },
+    "tilesetUrl": "/items/tileset_1.png",
+    "sellable": true,
+    "equippable": false
+  },
+  {
+    "id": "1754935730336",
+    "name": "Cloth Armor",
+    "desc": "Blusa simples, só pra não ficar pelado. Aumenta defesa em 1.",
+    "price": 50,
+    "category": "armor",
+    "sprite": {
+      "row": 13,
+      "col": 0
+    },
+    "tilesetUrl": "/items/tileset_1.png",
+    "sellable": true,
+    "equippable": true,
+    "equip": {
+      "bonuses": [
+        {
+          "stat": "defense",
+          "delta": 1
+        }
+      ]
+    }
+  },
+  {
+    "id": "1754938421501",
+    "name": "Fire Sword",
+    "desc": "Uma fruta.",
+    "price": 1000,
+    "category": "skill",
+    "sprite": {
+      "row": 25,
+      "col": 9
+    },
+    "tilesetUrl": "/items/tileset_1.png",
+    "sellable": true,
+    "equippable": false
+  },
+  {
+    "id": "1754955449841",
+    "name": "Strength Potion",
+    "desc": "Adds 2 to STR for 2 days",
+    "price": 180,
+    "category": "potion",
+    "sprite": {
+      "row": 4,
+      "col": 12
+    },
+    "tilesetUrl": "/items/tileset_1.png",
+    "sellable": true,
+    "equippable": false,
+    "stackable": true,
+    "use": {
+      "type": "buff",
+      "stat": "str",
+      "amount": 2,
+      "durationDays": 2,
+      "target": "ally"
+    }
+  },
+  {
+    "id": "1755032799919",
+    "name": "Golden Armor",
+    "desc": "+20 Def",
+    "price": 50000,
+    "category": "armor",
+    "sprite": {
+      "row": 13,
+      "col": 5
+    },
+    "tilesetUrl": "/items/tileset_1.png",
+    "sellable": true
+  },
+  {
+    "id": "1755036546728",
+    "name": "Wooden Shield",
+    "desc": "+1 def",
+    "price": 25,
+    "category": "armor",
+    "sprite": {
+      "row": 12,
+      "col": 2
+    },
+    "tilesetUrl": "/items/tileset_1.png",
+    "sellable": true
+  },
+  {
+    "id": "1755037398669",
+    "name": "Saint Cross",
+    "desc": "+15 Luck",
+    "price": 250,
+    "category": "accessory",
+    "sprite": {
+      "row": 19,
+      "col": 11
+    },
+    "tilesetUrl": "/items/tileset_1.png",
+    "sellable": true,
+    "equippable": true,
+    "use": [
+      {
+        "type": "buff",
+        "amount": 10,
+        "target": "ally",
+        "durationDays": 0
+      }
+    ]
+  },
+  {
+    "id": "1755037499741",
+    "name": "Oak Staff",
+    "desc": "+3 MAG",
+    "price": 180,
+    "category": "weapon",
+    "sprite": {
+      "row": 8,
+      "col": 0
+    },
+    "tilesetUrl": "/items/tileset_1.png",
+    "sellable": true,
+    "equippable": true,
+    "use": []
+  },
+  {
+    "id": "balanced_blade",
+    "name": "Balanced Blade",
+    "desc": "+2 STR, +2 DEF",
+    "price": 320,
+    "category": "weapon",
+    "sprite": {
+      "row": 5,
+      "col": 3
+    },
+    "tilesetUrl": "/items/tileset_1.png",
+    "sellable": true,
+    "equippable": true,
+    "stackable": false,
+    "equip": {
+      "bonuses": [
+        {
+          "stat": "str",
+          "delta": 2
+        },
+        {
+          "stat": "defense",
+          "delta": 2
+        }
+      ]
+    }
+  },
+  {
+    "id": "1755037512461",
+    "name": "Iron Sword",
+    "desc": "+3 STR",
+    "price": 120,
+    "category": "weapon",
+    "sprite": {
+      "row": 5,
+      "col": 10
+    },
+    "tilesetUrl": "/items/tileset_1.png",
+    "sellable": true,
+    "equippable": true,
+    "use": []
+  },
+  {
+    "id": "1755037566949",
+    "name": "Hero Blade",
+    "desc": "The strongest sword +100 STR, +25 DEF",
+    "price": 1000000,
+    "category": "weapon",
+    "sprite": {
+      "row": 5,
+      "col": 4
+    },
+    "tilesetUrl": "/items/tileset_1.png",
+    "sellable": true,
+    "use": [],
+    "equip": {
+      "bonuses": [
+        {
+          "stat": "str",
+          "delta": 100
+        },
+        {
+          "stat": "defense",
+          "delta": 25
+        }
+      ]
+    },
+    "equippable": true
+  }
+]
