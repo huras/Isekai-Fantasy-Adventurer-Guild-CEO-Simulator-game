@@ -278,3 +278,4 @@ export class EconomyManager {
 
 // Export singleton instance
 export const economyManager = EconomyManager.getInstance()
+

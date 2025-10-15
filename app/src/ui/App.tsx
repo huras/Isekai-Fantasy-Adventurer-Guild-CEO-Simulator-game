@@ -15,6 +15,7 @@ import { Expired } from './Expired'
 import { Tilesets } from './Tilesets'
 import { Items } from './Items'
 import { GuildInventory } from './GuildInventory'
+import { Dating } from './Dating'
 import { NextDayFAB } from './NextDayFAB'
 import { BattleAdmin } from './BattleAdmin'
 
@@ -25,6 +26,7 @@ function MainTabs() {
     { key: 'dashboard', label: 'Dashboard', icon: '📊', render: () => <Dashboard /> },
     { key: 'guild', label: 'Guild', icon: '👥', render: () => <Guild /> },
     { key: 'recruitment', label: 'Recruitment', icon: '📝', render: () => <Recruitment /> },
+    { key: 'dating', label: 'Dating', icon: '💕', render: () => <Dating /> },
     { key: 'quests', label: 'Quests', icon: '📜', render: () => <Quests /> },
     { key: 'kitchen', label: 'Kitchen (dev)', icon: '🍳', render: () => <Kitchen /> },
     { key: 'tilesets', label: 'Tilesets (admin)', icon: '🧩', render: () => <Tilesets /> },

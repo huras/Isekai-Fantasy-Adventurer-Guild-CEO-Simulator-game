@@ -550,3 +550,4 @@ export class GuildManager {
 
 // Export singleton instance
 export const guildManager = GuildManager.getInstance()
+

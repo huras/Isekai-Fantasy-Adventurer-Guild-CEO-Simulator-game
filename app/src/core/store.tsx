@@ -6,6 +6,7 @@ import { dailyUpkeep, spendMoney } from './money'
 import { addExperience, getExperienceProgress, getExperienceForNextLevel, getExperienceCurveEmoji, getExperienceCurveDescription } from './leveling'
 import { loadItemCategories } from './categories'
 import { logEvent, logBattle } from './logs'
+import { initializeDatingSystem, processHeartDecay, checkSpecialEvents } from './dating'
 // import { generateInitialShop } from './items'
 
 const initialState: GameState = {
@@ -49,12 +50,17 @@ const initialState: GameState = {
   marketTrends: [],
   events: [],
   goals: [],
-  tutorial: {
-    currentStep: 1,
-    completedSteps: [],
-    isActive: true,
-    currentTip: "Welcome to your guild! Start by recruiting some adventurers."
-  }
+      tutorial: {
+      currentStep: 1,
+      completedSteps: [],
+      isActive: true,
+      currentTip: "Welcome to your guild! Start by recruiting some adventurers."
+    },
+          // Dating system
+    datingSystem: initializeDatingSystem(),
+    // Dungeon system
+    dungeonQuests: [],
+    activeDungeon: undefined
 }
 
 type Action = { type: 'emit' | 'load'; payload?: GameState }
@@ -266,11 +272,30 @@ export function StoreProvider({ children, initial }: { children: React.ReactNode
   useEffect(() => {
     if (!state.members.some(m => m.isPlayer)) {
       const player: Member = {
-        id: 'player', isPlayer: true, name: 'You', class: 'Guildmaster', personality: 'heroic', gender: 'male',
+        id: 'player', 
+        isPlayer: true, 
+        name: 'You', 
+        class: 'Guildmaster', 
+        personality: 'heroic', 
+        gender: 'male',
         appearance: '♂️ Summoned human with dark hair and determined eyes; beauty 7/10',
-        upkeep: 0, stats: { str: 6, mag: 6, skill: 6, speed: 3, luck: 6, defense: 4, resistance: 4 }, hpMax: 40, hp: 18, mp: 10, mpMax: 300,
-         speed: 3, skills: ['Leadership', 'Tactics'],
-        level: 1, experience: 0, experienceCurve: 'normal',
+        upkeep: 0, 
+        stats: { str: 6, mag: 6, skill: 6, speed: 3, luck: 6, defense: 4, resistance: 4 }, 
+        hpMax: 40, 
+        hp: 18, 
+        mp: 10, 
+        mpMax: 300,
+        speed: 3, 
+        skills: ['Leadership', 'Tactics'],
+        level: 1, 
+        experience: 0, 
+        experienceCurve: 'normal',
+        // New tycoon mechanics
+        loyalty: 100,
+        trainingLevel: 5,
+        questsCompleted: 0,
+        questsFailed: 0,
+        totalEarnings: 0,
         // Ensure Guildmaster starts with specific items (Short Sword + two fruits) using stubs until catalog loads.
         items: [
           { id: '1754878147635' },
@@ -516,11 +541,21 @@ export function StoreProvider({ children, initial }: { children: React.ReactNode
         state.candidates = [...state.candidates, ...newCandidates]
       }
 
+            // Process dating system
+      processHeartDecay(state.datingSystem, state)
+      const specialEvents = checkSpecialEvents(state.datingSystem, state)
+      if (specialEvents.length > 0) {
+        specialEvents.forEach(event => {
+          logEvent(state, `💕 ${event.name}: ${event.description}`)
+          event.hasOccurred = true
+        })
+      }
+      
       // Optional: auto-assign (no run, no day pass) if setting enabled
       if (state.settings.autoAssign) {
         autoAssign(state)
       }
-
+      
       dispatch({ type: 'emit' })
     },
     battleAttack(): void {

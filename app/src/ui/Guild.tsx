@@ -2,7 +2,9 @@ import React, { useMemo, useState } from 'react'
 import { useStore } from '../core/store'
 import { AdventurerModal } from './AdventurerModal'
 import { ProgressBar } from './ProgressBar'
-import { getExperienceProgress, getExperienceForNextLevel, getExperienceCurveEmoji, getExperienceCurveDescription } from '../core/leveling'
+import { getExperienceProgress, getExperienceForNextLevel, getExperienceCurveDescription } from '../core/leveling'
+import { getExperienceCurveEmoji } from '../core/leveling'
+import { getHeartLevelEmoji } from '../core/dating'
 
 export function Guild() {
   const { state } = useStore()
@@ -96,6 +98,18 @@ export function Guild() {
                         <div className="small text-muted d-flex align-items-center gap-1">
                           {getExperienceCurveEmoji(m.experienceCurve)} {m.experienceCurve}
                         </div>
+                        {/* Heart level indicator for dating system */}
+                        {!m.isPlayer && m.gender && (() => {
+                          const romanticInterest = state.datingSystem.romanticInterests.find(ri => ri.memberId === m.id)
+                          if (romanticInterest) {
+                            return (
+                              <div className="small text-danger d-flex align-items-center gap-1 mt-1">
+                                {getHeartLevelEmoji(romanticInterest.heartLevel)} {romanticInterest.heartLevel} Hearts
+                              </div>
+                            )
+                          }
+                          return null
+                        })()}
                       </div>
                     </div>
 
